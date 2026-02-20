@@ -1,0 +1,96 @@
+<% content_for(:title) { "Editar #{@recipe.title} - Cucharada" } %>
+
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-3xl font-bold text-texto mb-6">Editar receta</h1>
+
+  <div class="bg-white rounded-xl border border-borde p-6">
+    <%= form_with model: @recipe, url: recipe_path(@recipe), multipart: true, class: "space-y-4" do |f| %>
+      <% if @recipe.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <ul class="text-red-700 text-sm list-disc list-inside">
+            <% @recipe.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div>
+        <%= f.label :title, "Título", class: "block text-sm font-medium text-texto mb-1" %>
+        <%= f.text_field :title, required: true, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+      </div>
+
+      <div>
+        <%= f.label :description, "Descripción", class: "block text-sm font-medium text-texto mb-1" %>
+        <%= f.text_area :description, rows: 3, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+      </div>
+
+      <% unless @recipe.source_type == "cucharada" %>
+        <div>
+          <%= f.label :inspired_by, "Inspirada en (opcional)", class: "block text-sm font-medium text-texto mb-1" %>
+          <%= f.text_field :inspired_by, placeholder: "Ej: mi abuela, Paulina Cocina, un libro...", class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+        </div>
+      <% end %>
+
+      <div>
+        <%= f.label :image, "Foto", class: "block text-sm font-medium text-texto mb-1" %>
+        <% if @recipe.image.attached? %>
+          <div class="mb-2">
+            <%= image_tag @recipe.image, class: "w-32 h-32 object-cover rounded-lg" %>
+          </div>
+        <% end %>
+        <%= f.file_field :image, accept: "image/*", class: "w-full border border-borde rounded-lg px-3 py-2 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-crema-light file:text-texto file:font-medium" %>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <%= f.label :servings, "Porciones", class: "block text-sm font-medium text-texto mb-1" %>
+          <%= f.number_field :servings, min: 1, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+        </div>
+        <div>
+          <%= f.label :prep_time, "Prep (min)", class: "block text-sm font-medium text-texto mb-1" %>
+          <%= f.number_field :prep_time, min: 0, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+        </div>
+        <div>
+          <%= f.label :cook_time, "Cocción (min)", class: "block text-sm font-medium text-texto mb-1" %>
+          <%= f.number_field :cook_time, min: 0, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+        </div>
+      </div>
+
+      <% if Tag.any? %>
+        <div>
+          <label class="block text-sm font-medium text-texto mb-2">Tags</label>
+          <div class="flex flex-wrap gap-2">
+            <% Tag.order(:name).each do |tag| %>
+              <label class="cursor-pointer">
+                <input type="checkbox" name="recipe[tag_ids][]" value="<%= tag.id %>" class="hidden peer" <%= "checked" if @recipe.tags.include?(tag) %>>
+                <span class="inline-block text-sm px-3 py-1 rounded-full border border-borde text-texto-muted peer-checked:bg-terracota peer-checked:text-white peer-checked:border-terracota transition">
+                  <%= tag.name %>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless @recipe.source_type == "cucharada" %>
+        <div class="flex items-center gap-3 bg-crema-light rounded-lg p-3">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="hidden" name="recipe[visibility]" value="private">
+            <input type="checkbox" name="recipe[visibility]" value="public" <%= "checked" if @recipe.public? %> class="sr-only peer">
+            <div class="w-9 h-5 bg-borde rounded-full peer peer-checked:bg-lima transition-colors after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+          </label>
+          <div>
+            <span class="text-sm font-medium text-texto">Compartir con la comunidad</span>
+            <p class="text-xs text-texto-muted">Si está activado, otros usuarios podrán ver tu receta</p>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="flex gap-4">
+        <%= f.submit "Guardar cambios", class: "bg-lima text-white px-6 py-2 rounded-lg font-medium hover:bg-lima-dark cursor-pointer" %>
+        <%= link_to "Cancelar", recipe_path(@recipe), class: "text-texto-light px-6 py-2 rounded-lg hover:bg-crema-light" %>
+      </div>
+    <% end %>
+  </div>
+</div>

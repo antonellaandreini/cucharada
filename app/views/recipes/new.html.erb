@@ -1,0 +1,157 @@
+<% content_for(:title) { "Nueva receta - Cucharada" } %>
+
+<div class="max-w-2xl mx-auto" id="form-container">
+  <h1 class="text-3xl font-bold text-texto mb-6">Nueva receta</h1>
+
+  <div class="bg-white rounded-xl border border-borde overflow-hidden mb-6">
+    <div class="flex border-b border-borde" id="import-tabs">
+      <button type="button" class="flex-1 py-3 text-center font-medium text-terracota border-b-2 border-terracota tab-btn active" onclick="showTab('photo')">
+        📸 Desde foto
+      </button>
+      <button type="button" class="flex-1 py-3 text-center font-medium text-texto-muted hover:text-terracota tab-btn" onclick="showTab('link')">
+        🔗 Desde link
+      </button>
+      <button type="button" class="flex-1 py-3 text-center font-medium text-texto-muted hover:text-terracota tab-btn" onclick="showTab('manual')">
+        ✍️ Manual
+      </button>
+    </div>
+
+    <div class="p-6 tab-content" id="tab-photo">
+      <%= form_with url: recipes_path, method: :post, multipart: true, class: "space-y-4", html: { onsubmit: "showLoading()" } do |f| %>
+        <%= hidden_field_tag :import_type, "photo" %>
+        <p class="text-texto-light">Subí una foto de una receta (de un libro, revista, o lo que sea) y la IA la va a extraer automáticamente.</p>
+        <div>
+          <label class="block text-sm font-medium text-texto mb-1">Foto de la receta</label>
+          <%= file_field_tag :recipe_image, accept: "image/*", required: true, class: "w-full border border-borde rounded-lg px-3 py-2 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-crema-light file:text-texto file:font-medium" %>
+        </div>
+        <%= f.submit "Importar receta", class: "w-full bg-lima text-white py-2 rounded-lg font-medium hover:bg-lima-dark cursor-pointer" %>
+      <% end %>
+    </div>
+
+    <div class="p-6 tab-content hidden" id="tab-link">
+      <%= form_with url: recipes_path, method: :post, class: "space-y-4", html: { onsubmit: "showLoading()" } do |f| %>
+        <%= hidden_field_tag :import_type, "link" %>
+        <p class="text-texto-light">Pegá el link de una receta de cualquier sitio web y la IA la va a extraer automáticamente.</p>
+        <div>
+          <label class="block text-sm font-medium text-texto mb-1">URL de la receta</label>
+          <%= text_field_tag :recipe_url, nil, placeholder: "https://ejemplo.com/receta-de-empanadas", required: true, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+        </div>
+        <%= f.submit "Importar receta", class: "w-full bg-lima text-white py-2 rounded-lg font-medium hover:bg-lima-dark cursor-pointer" %>
+      <% end %>
+    </div>
+
+    <div class="p-6 tab-content hidden" id="tab-manual">
+      <%= form_with model: @recipe, url: recipes_path, multipart: true, class: "space-y-4" do |f| %>
+        <%= hidden_field_tag :import_type, "manual" %>
+
+        <div>
+          <%= f.label :title, "Título", class: "block text-sm font-medium text-texto mb-1" %>
+          <%= f.text_field :title, required: true, placeholder: "Ej: Empanadas salteñas", class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+        </div>
+
+        <div>
+          <%= f.label :description, "Descripción", class: "block text-sm font-medium text-texto mb-1" %>
+          <%= f.text_area :description, rows: 3, placeholder: "Una breve descripción de la receta...", class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+        </div>
+
+        <div>
+          <%= f.label :inspired_by, "Inspirada en (opcional)", class: "block text-sm font-medium text-texto mb-1" %>
+          <%= f.text_field :inspired_by, placeholder: "Ej: mi abuela, Paulina Cocina, un libro...", class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+        </div>
+
+        <div>
+          <%= f.label :image, "Foto (opcional)", class: "block text-sm font-medium text-texto mb-1" %>
+          <%= f.file_field :image, accept: "image/*", class: "w-full border border-borde rounded-lg px-3 py-2 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-crema-light file:text-texto file:font-medium" %>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <%= f.label :servings, "Porciones", class: "block text-sm font-medium text-texto mb-1" %>
+            <%= f.number_field :servings, min: 1, placeholder: "4", class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+          </div>
+          <div>
+            <%= f.label :prep_time, "Prep (min)", class: "block text-sm font-medium text-texto mb-1" %>
+            <%= f.number_field :prep_time, min: 0, placeholder: "30", class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+          </div>
+          <div>
+            <%= f.label :cook_time, "Cocción (min)", class: "block text-sm font-medium text-texto mb-1" %>
+            <%= f.number_field :cook_time, min: 0, placeholder: "45", class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 bg-crema-light rounded-lg p-3">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="hidden" name="recipe[visibility]" value="private">
+            <input type="checkbox" name="recipe[visibility]" value="public" class="sr-only peer">
+            <div class="w-9 h-5 bg-borde rounded-full peer peer-checked:bg-lima transition-colors after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+          </label>
+          <div>
+            <span class="text-sm font-medium text-texto">Compartir con la comunidad</span>
+            <p class="text-xs text-texto-muted">Si está activado, otros usuarios podrán ver tu receta</p>
+          </div>
+        </div>
+
+        <%= f.submit "Crear receta", class: "w-full bg-lima text-white py-2 rounded-lg font-medium hover:bg-lima-dark cursor-pointer" %>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<%# Loading modal %>
+<div id="loading-overlay" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+  <div class="bg-white rounded-2xl border border-borde shadow-lg p-8 mx-4 max-w-sm w-full text-center">
+    <div class="mb-5">
+      <svg class="animate-spin h-10 w-10 mx-auto text-lima" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+    <p id="loading-message" class="text-texto text-lg font-medium mb-1"></p>
+    <p class="text-texto-muted text-sm">Esto puede tardar unos segundos</p>
+  </div>
+</div>
+
+<script>
+var loadingMessages = [
+  "Leyendo la receta...",
+  "Identificando ingredientes...",
+  "Separando los pasos...",
+  "Buscando las cantidades...",
+  "Traduciendo a argentino...",
+  "Calculando tiempos de cocción...",
+  "Ya casi está...",
+  "Último toque...",
+  "Armando todo..."
+];
+
+var messageIndex = 0;
+var messageInterval;
+
+function showLoading() {
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  document.getElementById('loading-message').textContent = loadingMessages[0];
+  messageIndex = 0;
+
+  messageInterval = setInterval(function() {
+    messageIndex++;
+    if (messageIndex < loadingMessages.length) {
+      document.getElementById('loading-message').textContent = loadingMessages[messageIndex];
+    }
+  }, 2500);
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.add('hidden'); });
+  document.querySelectorAll('.tab-btn').forEach(function(el) {
+    el.classList.remove('text-terracota', 'border-b-2', 'border-terracota', 'active');
+    el.classList.add('text-texto-muted');
+  });
+
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+
+  var buttons = document.querySelectorAll('.tab-btn');
+  var index = tab === 'photo' ? 0 : (tab === 'link' ? 1 : 2);
+  buttons[index].classList.add('text-terracota', 'border-b-2', 'border-terracota', 'active');
+  buttons[index].classList.remove('text-texto-muted');
+}
+</script>

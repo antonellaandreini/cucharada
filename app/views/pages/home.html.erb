@@ -1,0 +1,89 @@
+<% content_for(:title) { "Cucharada - Tu recetario argentino con IA" } %>
+
+<div class="max-w-2xl mx-auto pb-10 text-center">
+  <h1 class="text-2xl md:text-3xl font-semibold text-texto mb-6">
+    ¿Qué cocinamos hoy?
+  </h1>
+
+  <!-- SEARCH INPUT -->
+  <%= form_tag search_path, method: :get, class: "relative max-w-xl mx-auto mb-8" do %>
+    <div class="bg-white rounded-2xl border border-borde p-2 flex items-center gap-2 transition focus-within:border-lima focus-within:ring-2 focus-within:ring-lima/20">
+      <input
+        type="text"
+        name="q"
+        id="home-search"
+        placeholder="¿Qué querés cocinar hoy?"
+        class="flex-1 outline-none px-4 py-3 text-base bg-transparent text-texto placeholder-texto-muted"
+        autocomplete="off"
+      />
+      <button type="submit" class="bg-lima text-white px-5 py-3 rounded-xl hover:bg-lima-dark transition cursor-pointer font-semibold text-sm whitespace-nowrap">
+        Cocinar
+      </button>
+    </div>
+  <% end %>
+
+  <!-- EXAMPLE CHIPS -->
+  <p class="text-sm text-texto-light mb-3">No sabés qué escribir? Probá:</p>
+  <div class="flex flex-wrap justify-center gap-2.5">
+    <% ["Tengo pollo", "Guiso de fideos", "Milanesas"].each do |example| %>
+      <button
+        type="button"
+        onclick="document.getElementById('home-search').value = '<%= example %>'; document.getElementById('home-search').closest('form').submit();"
+        class="px-5 py-2.5 rounded-full bg-white border border-borde text-texto-light text-sm font-medium hover:border-terracota hover:text-terracota transition cursor-pointer"
+      >
+        <%= example %>
+      </button>
+    <% end %>
+  </div>
+</div>
+
+<!-- MY RECIPES (logged in only) -->
+<div class="pb-10">
+  <% if logged_in? && @my_recipes&.any? %>
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-lg font-semibold text-texto">Mis recetas</h2>
+      <%= link_to "Ver todas →", my_recipes_path, class: "text-sm text-terracota hover:text-terracota-dark transition font-medium" %>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6 mb-12">
+      <% @my_recipes.each do |recipe| %>
+        <%= render partial: "shared/recipe_card", locals: { recipe: recipe } %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- CURATED RECIPES -->
+  <% if @curated_recipes&.any? %>
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-lg font-semibold text-texto">Recetas para vos</h2>
+      <%= link_to "Ver todas →", recipes_path, class: "text-sm text-terracota hover:text-terracota-dark transition font-medium" %>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <% @curated_recipes.each do |recipe| %>
+        <%= render partial: "shared/recipe_card", locals: { recipe: recipe } %>
+      <% end %>
+    </div>
+  <% elsif @recent_recipes&.any? %>
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-lg font-semibold text-texto">Recetas recientes</h2>
+      <%= link_to "Ver todas →", recipes_path, class: "text-sm text-terracota hover:text-terracota-dark transition font-medium" %>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <% @recent_recipes.limit(3).each do |recipe| %>
+        <%= render partial: "shared/recipe_card", locals: { recipe: recipe } %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="grid md:grid-cols-3 gap-6">
+      <% 3.times do %>
+        <div class="bg-white rounded-2xl border border-borde overflow-hidden">
+          <div class="h-40 bg-crema-light animate-pulse"></div>
+          <div class="p-5">
+            <div class="h-4 w-3/4 bg-borde rounded-full mb-3 animate-pulse"></div>
+            <div class="h-3 w-full bg-borde/60 rounded-full mb-2 animate-pulse"></div>
+            <div class="h-3 w-5/6 bg-borde/60 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

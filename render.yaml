@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: cucharada
+    runtime: docker
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: RAILS_MASTER_KEY
+        sync: false
+      - key: SOLID_QUEUE_IN_PUMA
+        value: "1"

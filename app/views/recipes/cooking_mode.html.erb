@@ -1,0 +1,141 @@
+<% content_for(:title) { "#{@recipe.title} - Modo Cocina" } %>
+
+<div id="cooking-app" class="fixed inset-0 bg-fondo flex flex-col" data-total-steps="<%= @recipe.recipe_steps.size %>">
+  <!-- Top bar -->
+  <div class="bg-white border-b border-borde px-4 py-3 flex items-center justify-between shrink-0">
+    <%= link_to recipe_path(@recipe), class: "text-terracota font-medium text-sm hover:underline", id: "exit-cooking" do %>
+      <span class="flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        Salir
+      </span>
+    <% end %>
+    <h1 class="font-bold text-texto text-sm truncate mx-4 flex-1 text-center"><%= @recipe.title %></h1>
+    <button type="button" onclick="toggleIngredients()" class="text-terracota font-medium text-sm cursor-pointer hover:underline">
+      Ingredientes
+    </button>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="h-1 bg-borde/30 shrink-0">
+    <div id="progress-bar" class="h-full bg-terracota transition-all duration-300" style="width: 0%"></div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 flex items-center justify-center overflow-hidden relative" id="step-container">
+    <div class="px-8 py-6 max-w-2xl w-full text-center" id="step-content">
+      <p class="text-texto-muted text-sm mb-4" id="step-label"></p>
+      <p class="text-texto text-2xl md:text-3xl leading-relaxed font-medium" id="step-text"></p>
+    </div>
+  </div>
+
+  <!-- Bottom navigation -->
+  <div class="bg-white border-t border-borde px-6 py-4 flex items-center justify-between shrink-0">
+    <button type="button" id="btn-prev" onclick="goToStep(currentStep - 1)" class="px-5 py-2.5 rounded-full border border-borde text-texto-light font-medium text-sm hover:bg-crema transition cursor-pointer">
+      ← Anterior
+    </button>
+    <span class="text-texto-muted text-sm" id="step-counter"></span>
+    <button type="button" id="btn-next" onclick="goToStep(currentStep + 1)" class="px-5 py-2.5 rounded-full bg-terracota text-white font-medium text-sm hover:bg-terracota/90 transition cursor-pointer">
+      Siguiente →
+    </button>
+  </div>
+
+  <!-- Ingredients sidebar overlay -->
+  <div id="ingredients-overlay" class="fixed inset-0 bg-black/40 z-50 hidden" onclick="toggleIngredients()">
+    <div class="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-xl p-6 overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-bold text-texto text-lg">Ingredientes</h2>
+        <button type="button" onclick="toggleIngredients()" class="text-texto-muted hover:text-texto cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <ul class="space-y-2">
+        <% @recipe.recipe_ingredients.includes(:ingredient).each do |ri| %>
+          <li class="flex items-start gap-2 text-texto-light text-sm">
+            <span class="text-terracota mt-0.5">&#8226;</span>
+            <span>
+              <% if ri.quantity.present? %>
+                <strong class="text-texto"><%= ri.quantity %> <%= ri.unit %></strong>
+              <% end %>
+              <%= ri.ingredient.name %>
+              <% if ri.notes.present? %>
+                <span class="text-texto-muted">(<%= ri.notes %>)</span>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var steps = [
+      <% @recipe.recipe_steps.order(:step_number).each_with_index do |step, i| %>
+        <%= raw "{number: #{step.step_number}, text: #{step.instruction.to_json}}" %><%= ',' unless i == @recipe.recipe_steps.size - 1 %>
+      <% end %>
+    ];
+
+    var totalSteps = steps.length;
+    window.currentStep = 0;
+    var recipeUrl = '<%= recipe_path(@recipe) %>';
+
+    window.goToStep = function(index) {
+      if (index < 0) return;
+      if (index >= totalSteps) {
+        window.location.href = recipeUrl;
+        return;
+      }
+      window.currentStep = index;
+      var step = steps[index];
+      document.getElementById('step-label').textContent = 'Paso ' + step.number + ' de ' + totalSteps;
+      document.getElementById('step-text').textContent = step.text;
+      document.getElementById('step-counter').textContent = step.number + ' / ' + totalSteps;
+      document.getElementById('progress-bar').style.width = ((index + 1) / totalSteps * 100) + '%';
+
+      // Update buttons
+      var btnPrev = document.getElementById('btn-prev');
+      var btnNext = document.getElementById('btn-next');
+      btnPrev.style.visibility = index === 0 ? 'hidden' : 'visible';
+
+      if (index === totalSteps - 1) {
+        btnNext.innerHTML = '¡Listo! ✓';
+      } else {
+        btnNext.innerHTML = 'Siguiente →';
+      }
+    };
+
+    window.toggleIngredients = function() {
+      var overlay = document.getElementById('ingredients-overlay');
+      overlay.classList.toggle('hidden');
+    };
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); goToStep(currentStep + 1); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goToStep(currentStep - 1); }
+      if (e.key === 'Escape') { window.location.href = recipeUrl; }
+    });
+
+    // Touch swipe navigation
+    var touchStartX = 0;
+    var touchStartY = 0;
+    var container = document.getElementById('step-container');
+
+    container.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    container.addEventListener('touchend', function(e) {
+      var dx = e.changedTouches[0].screenX - touchStartX;
+      var dy = e.changedTouches[0].screenY - touchStartY;
+      if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+      if (dx < 0) goToStep(currentStep + 1); // swipe left = next
+      else goToStep(currentStep - 1); // swipe right = prev
+    }, { passive: true });
+
+    // Initialize first step
+    if (totalSteps > 0) goToStep(0);
+  })();
+</script>

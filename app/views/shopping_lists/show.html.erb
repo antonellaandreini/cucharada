@@ -1,0 +1,125 @@
+<% content_for(:title) { "#{@shopping_list.display_name} - Cucharada" } %>
+
+<div class="max-w-3xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-texto"><%= @shopping_list.display_name %></h1>
+      <p class="text-texto-muted text-sm mt-1">
+        <%= @unchecked_items.size %> pendiente<%= @unchecked_items.size == 1 ? "" : "s" %>
+        <% if @checked_items.any? %>
+          &middot; <%= @checked_items.size %> tachado<%= @checked_items.size == 1 ? "" : "s" %>
+        <% end %>
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to download_pdf_shopping_lists_path(list_id: @shopping_list.id), class: "text-lima hover:bg-lima hover:text-white text-sm border border-lima px-4 py-1.5 rounded-full transition flex items-center gap-1" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Descargar
+      <% end %>
+      <%= link_to shopping_lists_path, class: "text-texto-light hover:text-texto text-sm border border-borde px-4 py-1.5 rounded-full transition" do %>
+        &larr; Mis listas
+      <% end %>
+      <%= button_to shopping_list_path(@shopping_list), method: :delete, data: { turbo_confirm: "¿Eliminar esta lista?" }, class: "text-red-400 hover:bg-red-500 hover:text-white cursor-pointer text-sm border border-red-200 px-4 py-1.5 rounded-full transition" do %>
+        Eliminar lista
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Manual item entry form -->
+  <div class="bg-white rounded-xl border border-borde p-4 mb-4">
+    <%= form_tag add_item_shopping_list_path(@shopping_list), method: :post, class: "flex flex-wrap gap-2 items-end" do %>
+      <div class="flex-1 min-w-[150px]">
+        <label for="ingredient_name" class="text-xs text-texto-muted block mb-1">Ingrediente</label>
+        <input type="text" name="ingredient_name" id="ingredient_name" required placeholder="ej: Tomates"
+               class="w-full px-3 py-2 border border-borde rounded-lg text-sm focus:outline-none focus:border-lima">
+      </div>
+      <div class="w-20">
+        <label for="quantity" class="text-xs text-texto-muted block mb-1">Cantidad</label>
+        <input type="text" name="quantity" id="quantity" placeholder="2"
+               class="w-full px-3 py-2 border border-borde rounded-lg text-sm focus:outline-none focus:border-lima">
+      </div>
+      <div class="w-24">
+        <label for="unit" class="text-xs text-texto-muted block mb-1">Unidad</label>
+        <input type="text" name="unit" id="unit" placeholder="kg"
+               class="w-full px-3 py-2 border border-borde rounded-lg text-sm focus:outline-none focus:border-lima">
+      </div>
+      <button type="submit" class="bg-lima text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-lima/90 transition cursor-pointer">
+        + Agregar
+      </button>
+    <% end %>
+  </div>
+
+  <div class="bg-white rounded-xl border border-borde overflow-hidden">
+    <% if @unchecked_items.any? %>
+      <ul class="divide-y divide-borde/50">
+        <% @unchecked_items.each do |item| %>
+          <li class="flex items-center gap-3 px-4 py-3 hover:bg-crema-light/50 transition group">
+            <button onclick="toggleItem(<%= @shopping_list.id %>, <%= item.id %>, this)" class="w-5 h-5 rounded border-2 border-borde hover:border-lima transition cursor-pointer shrink-0"></button>
+            <div class="flex-1 min-w-0">
+              <span class="text-texto">
+                <% if item.quantity.present? %>
+                  <strong><%= item.quantity %> <%= item.unit %></strong>
+                <% end %>
+                <%= item.ingredient.name %>
+              </span>
+              <% if item.recipe %>
+                <span class="text-texto-muted text-xs ml-1">(de <%= item.recipe.title.truncate(30) %>)</span>
+              <% end %>
+            </div>
+            <%= button_to remove_item_shopping_list_path(@shopping_list, item_id: item.id), method: :delete, class: "text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition cursor-pointer text-sm" do %>
+              &times;
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="px-4 py-8 text-center text-texto-muted text-sm">
+        ¡Todos los items tachados!
+      </div>
+    <% end %>
+  </div>
+
+  <% if @checked_items.any? %>
+    <details class="mt-4">
+      <summary class="text-sm text-texto-muted cursor-pointer hover:text-texto transition">
+        Tachados (<%= @checked_items.size %>)
+      </summary>
+      <div class="bg-white rounded-xl border border-borde overflow-hidden mt-2">
+        <ul class="divide-y divide-borde/50">
+          <% @checked_items.each do |item| %>
+            <li class="flex items-center gap-3 px-4 py-3 opacity-50 group">
+              <button onclick="toggleItem(<%= @shopping_list.id %>, <%= item.id %>, this)" class="w-5 h-5 rounded border-2 border-lima bg-lima transition cursor-pointer shrink-0 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </button>
+              <div class="flex-1 min-w-0">
+                <span class="text-texto line-through">
+                  <% if item.quantity.present? %>
+                    <strong><%= item.quantity %> <%= item.unit %></strong>
+                  <% end %>
+                  <%= item.ingredient.name %>
+                </span>
+              </div>
+              <%= button_to remove_item_shopping_list_path(@shopping_list, item_id: item.id), method: :delete, class: "text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition cursor-pointer text-sm" do %>
+                &times;
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </details>
+  <% end %>
+</div>
+
+<script>
+  function toggleItem(listId, itemId, btn) {
+    fetch('/listas/' + listId + '/toggle_item?item_id=' + itemId, {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json'
+      }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function() { window.location.reload(); });
+  }
+</script>

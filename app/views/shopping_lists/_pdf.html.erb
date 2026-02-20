@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Lista de compras - <%= list.display_name %></title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; color: #333; }
+    h1 { font-size: 22px; border-bottom: 2px solid #E07A5F; padding-bottom: 8px; }
+    h2 { font-size: 16px; color: #666; margin-top: 20px; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 6px 0; border-bottom: 1px solid #eee; }
+    li::before { content: "☐ "; font-size: 16px; }
+    .checked li::before { content: "☑ "; }
+    .checked li { color: #999; text-decoration: line-through; }
+    .quantity { font-weight: bold; }
+    .footer { margin-top: 30px; font-size: 12px; color: #999; text-align: center; }
+    @media print { body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <h1><%= list.display_name %></h1>
+
+  <% if unchecked.any? %>
+    <h2>Pendientes (<%= unchecked.size %>)</h2>
+    <ul>
+      <% unchecked.each do |item| %>
+        <li>
+          <% if item.quantity.present? %>
+            <span class="quantity"><%= item.quantity %> <%= item.unit %></span>
+          <% end %>
+          <%= item.ingredient.name %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <% if checked.any? %>
+    <h2>Comprados (<%= checked.size %>)</h2>
+    <ul class="checked">
+      <% checked.each do |item| %>
+        <li>
+          <% if item.quantity.present? %>
+            <span class="quantity"><%= item.quantity %> <%= item.unit %></span>
+          <% end %>
+          <%= item.ingredient.name %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <div class="footer">
+    Generado por Cucharada - <%= Date.today.strftime("%-d/%m/%Y") %>
+  </div>
+</body>
+</html>

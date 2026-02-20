@@ -1,0 +1,23 @@
+<% content_for(:title) { "Iniciar sesión - Cucharada" } %>
+
+<div class="max-w-md mx-auto">
+  <h1 class="text-3xl font-bold text-texto mb-6 text-center">Iniciar sesión</h1>
+
+  <%= form_with url: login_path, method: :post, class: "bg-white rounded-xl p-6 border border-borde space-y-4" do |f| %>
+    <div>
+      <%= f.label :email, "Email", class: "block text-sm font-medium text-texto mb-1" %>
+      <%= f.email_field :email, required: true, autofocus: true, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+    </div>
+
+    <div>
+      <%= f.label :password, "Contraseña", class: "block text-sm font-medium text-texto mb-1" %>
+      <%= f.password_field :password, required: true, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+    </div>
+
+    <%= f.submit "Entrar", class: "w-full bg-lima text-white py-2 rounded-lg font-medium hover:bg-lima-dark cursor-pointer" %>
+  <% end %>
+
+  <p class="text-center mt-4 text-sm text-texto-light">
+    ¿No tenés cuenta? <%= link_to "Registrate", signup_path, class: "text-terracota font-medium hover:underline" %>
+  </p>
+</div>

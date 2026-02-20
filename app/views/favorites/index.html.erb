@@ -1,0 +1,18 @@
+<% content_for(:title) { "Mis favoritos - Cucharada" } %>
+
+<h1 class="text-3xl font-bold text-texto mb-6">Mis recetas favoritas</h1>
+
+<% if @recipes.any? %>
+  <div class="grid md:grid-cols-3 gap-6">
+    <% @recipes.each do |recipe| %>
+      <%= render partial: "shared/recipe_card", locals: { recipe: recipe } %>
+    <% end %>
+  </div>
+<% else %>
+  <div class="text-center py-12 bg-white rounded-xl border border-borde">
+    <p class="text-texto-light text-lg">Todavía no tenés recetas favoritas.</p>
+    <p class="mt-2">
+      <%= link_to "Explorá recetas", recipes_path, class: "text-terracota font-medium hover:underline" %>
+    </p>
+  </div>
+<% end %>

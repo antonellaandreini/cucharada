@@ -1,0 +1,43 @@
+<% content_for(:title) { "Crear cuenta - Cucharada" } %>
+
+<div class="max-w-md mx-auto">
+  <h1 class="text-3xl font-bold text-texto mb-6 text-center">Crear cuenta</h1>
+
+  <%= form_with model: @user, url: signup_path, class: "bg-white rounded-xl p-6 border border-borde space-y-4" do |f| %>
+    <% if @user.errors.any? %>
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <ul class="text-red-700 text-sm list-disc list-inside">
+          <% @user.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div>
+      <%= f.label :name, "Nombre", class: "block text-sm font-medium text-texto mb-1" %>
+      <%= f.text_field :name, required: true, autofocus: true, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+    </div>
+
+    <div>
+      <%= f.label :email, "Email", class: "block text-sm font-medium text-texto mb-1" %>
+      <%= f.email_field :email, required: true, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+    </div>
+
+    <div>
+      <%= f.label :password, "Contraseña", class: "block text-sm font-medium text-texto mb-1" %>
+      <%= f.password_field :password, required: true, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+    </div>
+
+    <div>
+      <%= f.label :password_confirmation, "Confirmar contraseña", class: "block text-sm font-medium text-texto mb-1" %>
+      <%= f.password_field :password_confirmation, required: true, class: "w-full border border-borde rounded-lg px-3 py-2 focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none" %>
+    </div>
+
+    <%= f.submit "Crear cuenta", class: "w-full bg-lima text-white py-2 rounded-lg font-medium hover:bg-lima-dark cursor-pointer" %>
+  <% end %>
+
+  <p class="text-center mt-4 text-sm text-texto-light">
+    ¿Ya tenés cuenta? <%= link_to "Iniciá sesión", login_path, class: "text-terracota font-medium hover:underline" %>
+  </p>
+</div>

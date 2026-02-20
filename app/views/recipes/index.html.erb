@@ -1,0 +1,136 @@
+<% content_for(:title) { "Recetas - Cucharada" } %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-3xl font-bold text-texto">Recetas</h1>
+  <% if logged_in? %>
+    <%= link_to "+ Nueva receta", new_recipe_path, class: "border border-terracota text-terracota px-4 py-2 rounded-lg font-medium hover:bg-terracota hover:text-white transition" %>
+  <% end %>
+</div>
+
+<!-- SEARCH BAR -->
+<form action="<%= recipes_path %>" method="get" class="mb-6">
+  <div class="flex gap-2">
+    <input type="text"
+           name="q"
+           value="<%= @query %>"
+           placeholder="Buscar recetas por nombre..."
+           class="flex-1 border border-borde rounded-xl px-4 py-3 text-lg focus:ring-2 focus:ring-lima/30 focus:border-lima outline-none bg-white">
+    <button type="submit" class="bg-terracota text-white px-6 py-3 rounded-xl font-medium hover:bg-terracota/90 transition cursor-pointer whitespace-nowrap">
+      Buscar
+    </button>
+  </div>
+</form>
+
+<!-- RECIPE OF THE DAY -->
+<% if @recipe_of_the_day %>
+  <div class="mb-10">
+    <h2 class="text-xl font-semibold text-texto mb-4">Receta del día</h2>
+    <%= link_to recipe_path(@recipe_of_the_day), class: "bg-white rounded-2xl border border-borde hover:shadow-md transition overflow-hidden block md:flex" do %>
+      <% if @recipe_of_the_day.thumbnail_base64.present? %>
+        <img src="<%= @recipe_of_the_day.thumbnail_base64 %>" alt="<%= @recipe_of_the_day.title %>" class="w-full md:w-1/2 h-56 md:h-72 object-cover">
+      <% elsif @recipe_of_the_day.image.attached? %>
+        <%= image_tag @recipe_of_the_day.image, class: "w-full md:w-1/2 h-56 md:h-72 object-cover" %>
+      <% else %>
+        <div class="w-full md:w-1/2 h-56 md:h-72 bg-gradient-to-br from-crema to-terracota/20 flex items-center justify-center">
+          <%= image_tag "logo.png", class: "h-36 opacity-40 mix-blend-multiply" %>
+        </div>
+      <% end %>
+
+      <div class="p-6 flex flex-col justify-center flex-1">
+        <h3 class="font-bold text-texto text-2xl mb-2"><%= @recipe_of_the_day.title %></h3>
+        <% if @recipe_of_the_day.chef_name.present? %>
+          <p class="text-terracota text-sm font-medium mb-2">
+            <span class="inline-flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              Receta de <%= @recipe_of_the_day.chef_name %>
+            </span>
+          </p>
+        <% end %>
+        <% if @recipe_of_the_day.description.present? %>
+          <p class="text-texto-light text-sm line-clamp-3 mb-3"><%= @recipe_of_the_day.description %></p>
+        <% end %>
+        <div class="flex gap-4 text-xs text-texto-muted">
+          <% if @recipe_of_the_day.prep_time.present? %>
+            <span>Prep: <%= @recipe_of_the_day.prep_time %> min</span>
+          <% end %>
+          <% if @recipe_of_the_day.cook_time.present? %>
+            <span>Cocción: <%= @recipe_of_the_day.cook_time %> min</span>
+          <% end %>
+          <% if @recipe_of_the_day.servings.present? %>
+            <span><%= @recipe_of_the_day.servings %> porciones</span>
+          <% end %>
+        </div>
+        <% avg = @recipe_of_the_day.average_rating %>
+        <% if avg %>
+          <div class="flex items-center gap-1 mt-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-terracota" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span class="text-sm font-medium text-texto"><%= avg %></span>
+            <span class="text-xs text-texto-muted">(<%= @recipe_of_the_day.ratings.size %>)</span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<!-- CURATED RECIPES -->
+<% if @curated_recipes&.any? %>
+  <div class="mb-10">
+    <h2 class="text-xl font-semibold text-texto mb-4">Recetas de Cucharada</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <% @curated_recipes.each do |recipe| %>
+        <%= render partial: "shared/recipe_card", locals: { recipe: recipe } %>
+      <% end %>
+    </div>
+
+    <% if @curated_total && @curated_total > @curated_recipes.size %>
+      <div class="flex justify-center gap-2 mt-8">
+        <% current_page = (params[:page] || 1).to_i %>
+        <% total_pages = (@curated_total.to_f / 12).ceil %>
+
+        <% if current_page > 1 %>
+          <%= link_to "← Anterior", recipes_path(page: current_page - 1, q: @query.presence), class: "px-4 py-2 rounded-lg border border-borde text-texto-light hover:bg-crema-light transition text-sm" %>
+        <% end %>
+
+        <span class="px-4 py-2 text-sm text-texto-muted">
+          Página <%= current_page %> de <%= total_pages %>
+        </span>
+
+        <% if current_page < total_pages %>
+          <%= link_to "Siguiente →", recipes_path(page: current_page + 1, q: @query.presence), class: "px-4 py-2 rounded-lg border border-borde text-texto-light hover:bg-crema-light transition text-sm" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<!-- COMMUNITY RECIPES -->
+<% if @community_recipes&.any? %>
+  <div class="mb-10">
+    <h2 class="text-xl font-semibold text-texto mb-4">Recetas de la comunidad</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <% @community_recipes.each do |recipe| %>
+        <%= render partial: "shared/recipe_card", locals: { recipe: recipe } %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- EMPTY STATE -->
+<% unless @curated_recipes&.any? || @community_recipes&.any? %>
+  <div class="text-center py-12 bg-white rounded-xl border border-borde">
+    <% if @query.present? %>
+      <p class="text-texto-light text-lg">No se encontraron recetas con "<%= @query %>".</p>
+      <p class="mt-2">
+        <%= link_to "Ver todas las recetas", recipes_path, class: "text-terracota font-medium hover:underline" %>
+      </p>
+    <% else %>
+      <p class="text-texto-light text-lg">Todavía no hay recetas.</p>
+      <% if logged_in? %>
+        <p class="mt-2">
+          <%= link_to "Creá la primera", new_recipe_path, class: "text-terracota font-medium hover:underline" %>
+        </p>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

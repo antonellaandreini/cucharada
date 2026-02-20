@@ -1,0 +1,41 @@
+<% content_for(:title) { "Mis recetas - Cucharada" } %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-3xl font-bold text-texto">Mis recetas</h1>
+  <%= link_to "+ Nueva receta", new_recipe_path, class: "border border-terracota text-terracota px-4 py-2 rounded-lg font-medium hover:bg-terracota hover:text-white transition" %>
+</div>
+
+<!-- SEARCH BAR -->
+<form action="<%= my_recipes_path %>" method="get" class="mb-6">
+  <div class="flex gap-2">
+    <input type="text"
+           name="q"
+           value="<%= @query %>"
+           placeholder="Buscar en mis recetas..."
+           class="flex-1 border border-borde rounded-xl px-4 py-3 text-lg focus:ring-2 focus:ring-lima/30 focus:border-lima outline-none bg-white">
+    <button type="submit" class="bg-terracota text-white px-6 py-3 rounded-xl font-medium hover:bg-terracota/90 transition cursor-pointer whitespace-nowrap">
+      Buscar
+    </button>
+  </div>
+</form>
+
+<% if @recipes.any? %>
+  <div class="grid md:grid-cols-3 gap-6">
+    <% @recipes.each do |recipe| %>
+      <%= render partial: "shared/recipe_card", locals: { recipe: recipe } %>
+    <% end %>
+  </div>
+<% else %>
+  <div class="text-center py-12 bg-white rounded-xl border border-borde">
+    <% if @query.present? %>
+      <p class="text-texto-light text-lg">No se encontraron recetas con "<%= @query %>".</p>
+      <p class="mt-2">
+        <%= link_to "Ver todas mis recetas", my_recipes_path, class: "text-terracota font-medium hover:underline" %>
+      </p>
+    <% else %>
+      <p class="text-texto-light text-lg mb-2">Todavía no tenés recetas.</p>
+      <p class="text-texto-muted text-sm mb-4">Podés crear una manualmente, importar desde una foto o desde un link.</p>
+      <%= link_to "Crear mi primera receta", new_recipe_path, class: "inline-block bg-terracota text-white px-6 py-2.5 rounded-lg font-medium hover:bg-terracota-dark transition" %>
+    <% end %>
+  </div>
+<% end %>

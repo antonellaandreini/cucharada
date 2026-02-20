@@ -1,0 +1,274 @@
+<% content_for(:title) { "Buscar recetas - Cucharada" } %>
+
+<div class="max-w-5xl mx-auto">
+  <%# Search bar %>
+  <form action="<%= search_path %>" method="get" id="search-form" class="mb-6">
+    <div class="flex gap-2">
+      <input type="text"
+             name="q"
+             value="<%= @query %>"
+             placeholder="Buscar recetas por nombre..."
+             class="flex-1 border border-borde rounded-xl px-4 py-3 text-lg focus:ring-2 focus:ring-lima/30 focus:border-lima outline-none bg-white">
+      <%# Preserve active filters %>
+      <% @selected_ids.each do |id| %>
+        <input type="hidden" name="ingredient_ids[]" value="<%= id %>">
+      <% end %>
+      <% if @chef.present? %>
+        <input type="hidden" name="chef" value="<%= @chef %>">
+      <% end %>
+      <% if @tag.present? %>
+        <input type="hidden" name="tag" value="<%= @tag %>">
+      <% end %>
+      <button type="submit" class="bg-terracota text-white px-6 py-3 rounded-xl font-medium hover:bg-terracota/90 transition cursor-pointer whitespace-nowrap">
+        Buscar
+      </button>
+    </div>
+  </form>
+
+  <%# Active filter chips %>
+  <% if @has_filters %>
+    <div class="flex flex-wrap gap-2 mb-6">
+      <% if @query.present? %>
+        <%
+          chip_params = {}
+          chip_params[:chef] = @chef if @chef.present?
+          chip_params[:tag] = @tag if @tag.present?
+          @selected_ids.each { |id| (chip_params[:ingredient_ids] ||= []) << id }
+        %>
+        <a href="<%= search_path(chip_params) %>" class="inline-flex items-center gap-1.5 bg-terracota/10 text-terracota text-sm font-medium px-3 py-1.5 rounded-full border border-terracota/20 hover:bg-terracota/20 transition">
+          "<%= @query %>"
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </a>
+      <% end %>
+
+      <% @selected_ids.each do |id| %>
+        <% ingredient = Ingredient.find_by(id: id) %>
+        <% if ingredient %>
+          <%
+            remaining_ids = @selected_ids - [id]
+            chip_params = {}
+            chip_params[:q] = @query if @query.present?
+            chip_params[:chef] = @chef if @chef.present?
+            chip_params[:tag] = @tag if @tag.present?
+            remaining_ids.each { |rid| (chip_params[:ingredient_ids] ||= []) << rid }
+          %>
+          <a href="<%= search_path(chip_params) %>" class="inline-flex items-center gap-1.5 bg-lima/10 text-lima-dark text-sm font-medium px-3 py-1.5 rounded-full border border-lima/20 hover:bg-lima/20 transition">
+            <%= ingredient.name %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </a>
+        <% end %>
+      <% end %>
+
+      <% if @chef.present? %>
+        <%
+          chip_params = {}
+          chip_params[:q] = @query if @query.present?
+          chip_params[:tag] = @tag if @tag.present?
+          @selected_ids.each { |id| (chip_params[:ingredient_ids] ||= []) << id }
+        %>
+        <a href="<%= search_path(chip_params) %>" class="inline-flex items-center gap-1.5 bg-crema text-texto text-sm font-medium px-3 py-1.5 rounded-full border border-borde hover:bg-crema-light transition">
+          <%= @chef %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </a>
+      <% end %>
+
+      <% if @tag.present? %>
+        <%
+          chip_params = {}
+          chip_params[:q] = @query if @query.present?
+          chip_params[:chef] = @chef if @chef.present?
+          @selected_ids.each { |id| (chip_params[:ingredient_ids] ||= []) << id }
+        %>
+        <a href="<%= search_path(chip_params) %>" class="inline-flex items-center gap-1.5 bg-terracota/10 text-terracota text-sm font-medium px-3 py-1.5 rounded-full border border-terracota/20 hover:bg-terracota/20 transition">
+          #<%= Tag.find_by(slug: @tag)&.name || @tag %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </a>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# Tag chips %>
+  <% if @tags.any? %>
+    <div class="flex flex-wrap gap-2 mb-6">
+      <% @tags.each do |tag| %>
+        <%
+          tag_params = {}
+          tag_params[:q] = @query if @query.present?
+          tag_params[:chef] = @chef if @chef.present?
+          @selected_ids.each { |id| (tag_params[:ingredient_ids] ||= []) << id }
+          tag_params[:tag] = tag.slug
+        %>
+        <% active = @tag == tag.slug %>
+        <a href="<%= search_path(active ? tag_params.except(:tag) : tag_params) %>" class="text-sm px-3 py-1 rounded-full border transition <%= active ? 'bg-terracota text-white border-terracota' : 'bg-white text-texto-muted border-borde hover:bg-crema' %>">
+          <%= tag.name %>
+        </a>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# Collapsible filter panel %>
+  <details class="mb-8 bg-white rounded-xl border border-borde" <%= "open" unless @has_filters %>>
+    <summary class="px-5 py-3.5 cursor-pointer font-medium text-texto flex items-center justify-between select-none">
+      <span class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-texto-muted" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
+        Filtros
+        <% active_count = [@query.present? ? 1 : 0, @selected_ids.size, @chef.present? ? 1 : 0, @tag.present? ? 1 : 0].sum %>
+        <% if active_count > 0 %>
+          <span class="bg-terracota text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"><%= active_count %></span>
+        <% end %>
+      </span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-texto-muted transition-transform details-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+    </summary>
+
+    <div class="px-5 pb-5 pt-2 border-t border-borde">
+      <form action="<%= search_path %>" method="get" id="filter-form">
+        <%# Preserve text query and tag %>
+        <% if @query.present? %>
+          <input type="hidden" name="q" value="<%= @query %>">
+        <% end %>
+        <% if @tag.present? %>
+          <input type="hidden" name="tag" value="<%= @tag %>">
+        <% end %>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <%# Ingredients %>
+          <div>
+            <label class="block font-medium text-texto text-sm mb-2">Ingredientes</label>
+            <input type="text"
+                   id="ingredient-search"
+                   placeholder="Buscar ingrediente..."
+                   class="w-full border border-borde rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none"
+                   oninput="searchIngredients(this.value)">
+            <div id="search-results" class="mt-2"></div>
+
+            <div id="selected-ingredients" class="space-y-1 mt-3">
+              <% if @selected_ids.any? %>
+                <% @selected_ids.each do |id| %>
+                  <% ingredient = Ingredient.find_by(id: id) %>
+                  <% if ingredient %>
+                    <div class="flex items-center justify-between bg-lima/10 px-3 py-1.5 rounded-lg text-sm border border-lima/20">
+                      <span class="text-texto"><%= ingredient.name %></span>
+                      <input type="hidden" name="ingredient_ids[]" value="<%= id %>">
+                      <button type="button" onclick="removeIngredient(this)" class="text-red-400 hover:text-red-600 cursor-pointer ml-2">&times;</button>
+                    </div>
+                  <% end %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+
+          <%# Chef %>
+          <div>
+            <label class="block font-medium text-texto text-sm mb-2">Cocinero/a</label>
+            <% if @chefs.any? %>
+              <select name="chef" class="w-full border border-borde rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-lima/20 focus:border-lima outline-none">
+                <option value="">Todos los cocineros</option>
+                <% @chefs.each do |chef| %>
+                  <option value="<%= chef %>" <%= "selected" if @chef == chef %>><%= chef %></option>
+                <% end %>
+              </select>
+            <% else %>
+              <p class="text-texto-muted text-sm">No hay cocineros disponibles.</p>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="mt-5">
+          <button type="submit" class="bg-lima text-white px-6 py-2.5 rounded-lg font-medium hover:bg-lima-dark transition cursor-pointer">
+            Aplicar filtros
+          </button>
+        </div>
+      </form>
+    </div>
+  </details>
+
+  <%# Results %>
+  <% if @total > 0 %>
+    <p class="text-texto-light mb-4">
+      <span class="font-semibold text-texto"><%= @total %></span> receta<%= @total == 1 ? "" : "s" %> encontrada<%= @total == 1 ? "" : "s" %>
+    </p>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% @recipes.each do |recipe| %>
+        <%= render partial: "shared/recipe_card", locals: { recipe: recipe } %>
+      <% end %>
+    </div>
+
+    <%# Pagination %>
+    <% total_pages = (@total.to_f / SearchController::PER_PAGE).ceil %>
+    <% if total_pages > 1 %>
+      <%
+        pagination_params = {}
+        pagination_params[:q] = @query if @query.present?
+        pagination_params[:chef] = @chef if @chef.present?
+        pagination_params[:tag] = @tag if @tag.present?
+        @selected_ids.each { |id| (pagination_params[:ingredient_ids] ||= []) << id } if @selected_ids.any?
+      %>
+      <div class="flex justify-center items-center gap-2 mt-8">
+        <% if @page > 1 %>
+          <%= link_to search_path(pagination_params.merge(page: @page - 1)), class: "px-4 py-2 rounded-lg border border-borde text-texto-light hover:bg-crema-light transition text-sm" do %>
+            &larr; Anterior
+          <% end %>
+        <% end %>
+
+        <span class="px-4 py-2 text-sm text-texto-muted">
+          Página <%= @page %> de <%= total_pages %>
+        </span>
+
+        <% if @page < total_pages %>
+          <%= link_to search_path(pagination_params.merge(page: @page + 1)), class: "px-4 py-2 rounded-lg border border-borde text-texto-light hover:bg-crema-light transition text-sm" do %>
+            Siguiente &rarr;
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  <% elsif @has_filters %>
+    <%# No results with active filters %>
+    <div class="text-center py-16">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-texto-muted/40 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+      <p class="text-texto-light text-lg">No encontramos recetas con esos filtros.</p>
+      <p class="text-texto-muted text-sm mt-1">Probá quitando algún filtro o buscando con otros términos.</p>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  details[open] .details-chevron {
+    transform: rotate(180deg);
+  }
+</style>
+
+<script>
+function searchIngredients(query) {
+  var resultsDiv = document.getElementById('search-results');
+  if (query.length < 2) {
+    resultsDiv.innerHTML = '';
+    return;
+  }
+
+  fetch('/ingredientes/buscar?q=' + encodeURIComponent(query))
+    .then(function(r) { return r.text(); })
+    .then(function(html) { resultsDiv.innerHTML = html; });
+}
+
+function addIngredient(id, name) {
+  var container = document.getElementById('selected-ingredients');
+
+  var existing = container.querySelector('input[value="' + id + '"]');
+  if (existing) return;
+
+  var div = document.createElement('div');
+  div.className = 'flex items-center justify-between bg-lima/10 px-3 py-1.5 rounded-lg text-sm border border-lima/20';
+  div.innerHTML = '<span class="text-texto">' + name + '</span>' +
+    '<input type="hidden" name="ingredient_ids[]" value="' + id + '">' +
+    '<button type="button" onclick="removeIngredient(this)" class="text-red-400 hover:text-red-600 cursor-pointer ml-2">&times;</button>';
+  container.appendChild(div);
+
+  document.getElementById('ingredient-search').value = '';
+  document.getElementById('search-results').innerHTML = '';
+}
+
+function removeIngredient(btn) {
+  btn.parentElement.remove();
+}
+</script>

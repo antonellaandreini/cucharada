@@ -1,0 +1,14 @@
+<% if ingredients.any? %>
+  <div class="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-48 overflow-y-auto">
+    <% ingredients.each do |ingredient| %>
+      <button type="button"
+              onclick="addIngredient(<%= ingredient.id %>, '<%= j ingredient.name %>')"
+              class="w-full text-left px-3 py-2 hover:bg-crema-light text-sm cursor-pointer flex items-center justify-between">
+        <span><%= ingredient.name %></span>
+        <span class="text-gray-400 text-xs"><%= ingredient.category %></span>
+      </button>
+    <% end %>
+  </div>
+<% else %>
+  <p class="text-gray-400 text-sm py-2">No se encontraron ingredientes.</p>
+<% end %>

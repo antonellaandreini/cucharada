@@ -1,0 +1,495 @@
+<% content_for(:title) { "#{@recipe.title} - Cucharada" } %>
+
+<div class="max-w-3xl mx-auto">
+  <div class="bg-white rounded-xl border border-borde overflow-hidden mb-6">
+    <% if @recipe.thumbnail_base64.present? %>
+      <img src="<%= @recipe.thumbnail_base64 %>" alt="<%= @recipe.title %>" class="w-full h-72 object-cover">
+    <% elsif @recipe.image.attached? %>
+      <%= image_tag @recipe.image, class: "w-full h-72 object-cover" %>
+    <% else %>
+      <div class="w-full h-72 bg-gradient-to-br from-crema to-terracota/20 flex items-center justify-center">
+        <%= image_tag "logo.png", class: "h-56 opacity-40 mix-blend-multiply" %>
+      </div>
+    <% end %>
+
+    <div class="p-6">
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-texto mb-2"><%= @recipe.title %></h1>
+          <% if @recipe.chef_name.present? %>
+            <p class="text-terracota text-sm font-medium mb-1">
+              <span class="inline-flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                Receta de <%= @recipe.chef_name %>
+              </span>
+            </p>
+          <% end %>
+          <p class="text-texto-light text-sm">
+            por <%= @recipe.user.name %>
+            <% if @recipe.source_type == "link" && @recipe.source_url.present? %>
+              &middot; <%= link_to "Ver original", @recipe.source_url, target: "_blank", class: "text-terracota hover:underline" %>
+            <% end %>
+          </p>
+          <% if @recipe.inspired_by.present? %>
+            <p class="text-texto-muted text-xs mt-0.5">Inspirada en: <%= @recipe.inspired_by %></p>
+          <% end %>
+          <% if logged_in? && @recipe.user == current_user && @recipe.source_type != "cucharada" %>
+            <% if @recipe.public? %>
+              <span class="inline-flex items-center gap-1 text-lima-dark text-xs font-medium px-2.5 py-0.5 rounded-full border border-lima/20 bg-lima/10 mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                Pública
+              </span>
+            <% else %>
+              <span class="inline-flex items-center gap-1 text-texto-muted text-xs font-medium px-2.5 py-0.5 rounded-full border border-borde mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                Privada
+              </span>
+            <% end %>
+          <% end %>
+        </div>
+
+        <div class="flex gap-2">
+          <% if @recipe.public? %>
+            <button type="button" id="share-btn" onclick="shareRecipe()" class="text-texto-light hover:bg-crema hover:text-texto text-sm border border-borde px-4 py-1.5 rounded-full transition flex items-center gap-1.5 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+              <span id="share-btn-text">Compartir</span>
+            </button>
+          <% end %>
+
+          <% if logged_in? %>
+            <% favorite = current_user.favorites.find_by(recipe: @recipe) %>
+            <% if favorite %>
+              <%= button_to favorite_path(favorite), method: :delete, class: "text-terracota hover:bg-terracota hover:text-white cursor-pointer text-sm border border-terracota/30 px-4 py-1.5 rounded-full transition flex items-center gap-1.5" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                Favorito
+              <% end %>
+            <% else %>
+              <%= button_to favorites_path(recipe_id: @recipe.id), class: "text-terracota hover:bg-terracota hover:text-white cursor-pointer text-sm border border-terracota/30 px-4 py-1.5 rounded-full transition flex items-center gap-1.5" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                Favorito
+              <% end %>
+            <% end %>
+          <% else %>
+            <%= link_to login_path, class: "text-terracota hover:bg-terracota hover:text-white text-sm border border-terracota/30 px-4 py-1.5 rounded-full transition flex items-center gap-1.5" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              Favorito
+            <% end %>
+          <% end %>
+
+          <% if logged_in? && @recipe.user == current_user %>
+            <%= link_to edit_recipe_path(@recipe), class: "text-texto-light hover:bg-borde hover:text-texto text-sm border border-borde px-4 py-1.5 rounded-full transition flex items-center gap-1.5" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Editar
+            <% end %>
+            <%= button_to recipe_path(@recipe), method: :delete, data: { turbo_confirm: "¿Estás seguro/a?" }, class: "text-red-400 hover:bg-red-500 hover:text-white cursor-pointer text-sm border border-red-200 px-4 py-1.5 rounded-full transition flex items-center gap-1.5" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/></svg>
+              Eliminar
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @recipe.description.present? %>
+        <p class="text-texto-light mt-4"><%= @recipe.description %></p>
+      <% end %>
+
+      <% if @recipe.tags.any? %>
+        <div class="flex flex-wrap gap-1.5 mt-3">
+          <% @recipe.tags.each do |tag| %>
+            <%= link_to search_path(tag: tag.slug), class: "text-xs bg-crema text-texto-muted px-2.5 py-1 rounded-full border border-borde/50 hover:bg-terracota/10 hover:text-terracota hover:border-terracota/20 transition" do %>
+              <%= tag.name %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="flex gap-6 mt-4 text-sm text-texto-light">
+        <% if @recipe.prep_time.present? %>
+          <div>
+            <span class="font-medium text-texto">Preparación:</span> <%= @recipe.prep_time %> min
+          </div>
+        <% end %>
+        <% if @recipe.cook_time.present? %>
+          <div>
+            <span class="font-medium text-texto">Cocción:</span> <%= @recipe.cook_time %> min
+          </div>
+        <% end %>
+        <% if @recipe.servings.present? %>
+          <div class="flex items-center gap-2" id="servings-control" data-original-servings="<%= @recipe.servings %>">
+            <span class="font-medium text-texto">Porciones:</span>
+            <button type="button" onclick="updateServings(-1)" class="w-7 h-7 rounded-full border border-borde text-texto hover:bg-crema transition flex items-center justify-center cursor-pointer text-lg font-bold leading-none">−</button>
+            <span id="current-servings" class="font-semibold text-texto min-w-[1.5rem] text-center"><%= @recipe.servings %></span>
+            <button type="button" onclick="updateServings(1)" class="w-7 h-7 rounded-full border border-borde text-texto hover:bg-crema transition flex items-center justify-center cursor-pointer text-lg font-bold leading-none">+</button>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @recipe.recipe_steps.any? %>
+        <div class="mt-4">
+          <%= link_to cocinar_recipe_path(@recipe), class: "inline-flex items-center gap-2 bg-lima text-white px-5 py-2.5 rounded-full font-medium text-sm hover:bg-lima/90 transition" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Modo cocina
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-6">
+    <div class="md:col-span-1">
+      <div class="bg-white rounded-xl border border-borde p-6">
+        <h2 class="text-xl font-bold text-texto mb-4">Ingredientes</h2>
+        <% if @recipe.recipe_ingredients.any? %>
+          <ul class="space-y-2">
+            <% @recipe.recipe_ingredients.includes(:ingredient).each do |ri| %>
+              <li class="flex items-start gap-2 text-texto-light ingredient-item">
+                <span class="text-terracota mt-1">&#8226;</span>
+                <span>
+                  <% if ri.quantity.present? %>
+                    <strong class="text-texto ingredient-quantity" data-original-quantity="<%= ri.quantity %>"><span class="quantity-value"><%= ri.quantity %></span> <%= ri.unit %></strong>
+                  <% end %>
+                  <%= ri.ingredient.name %>
+                  <% if ri.notes.present? %>
+                    <span class="text-texto-muted text-sm">(<%= ri.notes %>)</span>
+                  <% end %>
+                </span>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-texto-muted">Sin ingredientes.</p>
+        <% end %>
+
+        <% if logged_in? && @recipe.recipe_ingredients.any? %>
+          <div class="mt-4 pt-4 border-t border-borde/50">
+            <% existing_lists = current_user.shopping_lists.order(updated_at: :desc) %>
+            <% if existing_lists.any? %>
+              <details class="group">
+                <summary class="w-full text-sm bg-lima/10 text-lima-dark border border-lima/20 px-4 py-2 rounded-lg font-medium hover:bg-lima/20 transition cursor-pointer flex items-center justify-center gap-2 list-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                  Agregar a lista de compras
+                </summary>
+                <div class="mt-2 space-y-1">
+                  <% existing_lists.each do |list| %>
+                    <%= button_to shopping_lists_path(recipe_id: @recipe.id, shopping_list_id: list.id), method: :post, class: "w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-crema transition cursor-pointer text-texto-light" do %>
+                      <span class="font-medium text-texto"><%= list.display_name %></span>
+                      <span class="text-xs text-texto-muted">(<%= list.items.unchecked.count %> pendientes)</span>
+                    <% end %>
+                  <% end %>
+                  <div class="border-t border-borde/50 pt-1 mt-1">
+                    <%= button_to shopping_lists_path(recipe_id: @recipe.id), method: :post, class: "w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-lima/10 transition cursor-pointer text-lima-dark font-medium" do %>
+                      + Crear lista nueva
+                    <% end %>
+                  </div>
+                </div>
+              </details>
+            <% else %>
+              <%= button_to shopping_lists_path(recipe_id: @recipe.id), method: :post, class: "w-full text-sm bg-lima/10 text-lima-dark border border-lima/20 px-4 py-2 rounded-lg font-medium hover:bg-lima/20 transition cursor-pointer flex items-center justify-center gap-2" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Agregar a lista de compras
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="md:col-span-2">
+      <div class="bg-white rounded-xl border border-borde p-6">
+        <h2 class="text-xl font-bold text-texto mb-4">Preparación</h2>
+        <% if @recipe.recipe_steps.any? %>
+          <ol class="space-y-4">
+            <% @recipe.recipe_steps.each do |step| %>
+              <li class="flex gap-4">
+                <span class="bg-terracota text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shrink-0">
+                  <%= step.step_number %>
+                </span>
+                <p class="text-texto-light pt-1"><%= step.instruction %></p>
+              </li>
+            <% end %>
+          </ol>
+        <% else %>
+          <p class="text-texto-muted">Sin pasos.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <% if @recipe.public? %>
+    <!-- Ratings section -->
+    <div class="bg-white rounded-xl border border-borde p-6 mt-6">
+      <h2 class="text-xl font-bold text-texto mb-4">Calificaciones</h2>
+
+      <% avg = @recipe.average_rating %>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="flex items-center gap-0.5">
+          <% 5.times do |i| %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 <%= avg && i < avg.round ? 'text-terracota' : 'text-borde' %>" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          <% end %>
+        </div>
+        <% if avg %>
+          <span class="text-texto font-semibold text-lg"><%= avg %></span>
+          <span class="text-texto-muted text-sm">(<%= @recipe.ratings.size %> <%= @recipe.ratings.size == 1 ? 'calificación' : 'calificaciones' %>)</span>
+        <% else %>
+          <span class="text-texto-muted text-sm">Sin calificaciones aún</span>
+        <% end %>
+      </div>
+
+      <% if logged_in? && @recipe.user != current_user %>
+        <% current_rating = @recipe.rating_by(current_user) %>
+        <%= form_with url: recipe_rating_path(@recipe), method: :post, class: "flex items-center gap-3", data: { controller: "rating" } do %>
+          <span class="text-sm text-texto-light">Tu calificación:</span>
+          <div class="flex items-center gap-0.5" data-rating-target="stars"
+               onmouseleave="
+                 var checked = this.querySelector('input:checked');
+                 var score = checked ? parseInt(checked.value) : 0;
+                 this.querySelectorAll('svg').forEach(function(s, idx) {
+                   s.classList.toggle('text-terracota', idx < score);
+                   s.classList.toggle('text-borde', idx >= score);
+                 });
+               ">
+            <% 5.times do |i| %>
+              <label class="cursor-pointer">
+                <input type="radio" name="score" value="<%= i + 1 %>" class="hidden" <%= 'checked' if current_rating&.score == i + 1 %>>
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-7 w-7 transition-colors hover:text-terracota <%= current_rating&.score.to_i >= i + 1 ? 'text-terracota' : 'text-borde' %>"
+                     fill="currentColor" viewBox="0 0 24 24"
+                     data-rating-target="star" data-value="<%= i + 1 %>"
+                     onclick="
+                       this.closest('form').querySelector('input[value=\'<%= i + 1 %>\']').checked = true;
+                       this.closest('[data-rating-target=\'stars\']').querySelectorAll('svg').forEach((s, idx) => {
+                         s.classList.toggle('text-terracota', idx <= <%= i %>);
+                         s.classList.toggle('text-borde', idx > <%= i %>);
+                       });
+                     "
+                     onmouseenter="
+                       this.closest('[data-rating-target=\'stars\']').querySelectorAll('svg').forEach((s, idx) => {
+                         s.classList.toggle('text-terracota', idx <= <%= i %>);
+                         s.classList.toggle('text-borde', idx > <%= i %>);
+                       });
+                     ">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </label>
+            <% end %>
+          </div>
+          <button type="submit" class="text-sm bg-terracota text-white px-4 py-1.5 rounded-full hover:bg-terracota/90 transition cursor-pointer">
+            Calificar
+          </button>
+        <% end %>
+      <% elsif !logged_in? %>
+        <p class="text-texto-muted text-sm">
+          <%= link_to "Iniciá sesión", login_path, class: "text-terracota hover:underline font-medium" %> para calificar esta receta.
+        </p>
+      <% end %>
+    </div>
+
+    <!-- Comments section -->
+    <div class="bg-white rounded-xl border border-borde p-6 mt-6">
+      <h2 class="text-xl font-bold text-texto mb-4">
+        Comentarios
+        <% if @recipe.comments.any? %>
+          <span class="text-texto-muted text-base font-normal">(<%= @recipe.comments.size %>)</span>
+        <% end %>
+      </h2>
+
+      <% if @recipe.comments.any? %>
+        <div class="space-y-4 mb-6">
+          <% @recipe.comments.includes(:user).order(created_at: :desc).each do |comment| %>
+            <div class="border-b border-borde/50 pb-4 last:border-b-0">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-texto text-sm"><%= comment.user.name %></span>
+                  <span class="text-texto-muted text-xs"><%= time_ago_in_words(comment.created_at) %></span>
+                </div>
+                <% if logged_in? && comment.user == current_user %>
+                  <%= button_to recipe_comment_path(@recipe, comment), method: :delete, data: { turbo_confirm: "¿Eliminar este comentario?" }, class: "text-red-400 hover:text-red-600 text-xs cursor-pointer" do %>
+                    Eliminar
+                  <% end %>
+                <% end %>
+              </div>
+              <p class="text-texto-light text-sm"><%= comment.body %></p>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-texto-muted text-sm mb-4">Sin comentarios aún. ¡Sé el primero!</p>
+      <% end %>
+
+      <% if logged_in? && @recipe.user != current_user %>
+        <%= form_with url: recipe_comments_path(@recipe), method: :post, class: "mt-4" do %>
+          <textarea name="comment[body]" rows="3" maxlength="1000" placeholder="Escribí tu comentario..." class="w-full border border-borde rounded-lg p-3 text-sm text-texto focus:outline-none focus:ring-2 focus:ring-terracota/30 focus:border-terracota resize-none" required></textarea>
+          <div class="flex justify-end mt-2">
+            <button type="submit" class="text-sm bg-terracota text-white px-5 py-2 rounded-full hover:bg-terracota/90 transition cursor-pointer">
+              Comentar
+            </button>
+          </div>
+        <% end %>
+      <% elsif !logged_in? %>
+        <p class="text-texto-muted text-sm mt-4">
+          <%= link_to "Iniciá sesión", login_path, class: "text-terracota hover:underline font-medium" %> para dejar un comentario.
+        </p>
+      <% end %>
+    </div>
+
+    <!-- Cook photos gallery -->
+    <div class="bg-white rounded-xl border border-borde p-6 mt-6">
+      <h2 class="text-xl font-bold text-texto mb-4">
+        Fotos de la comunidad
+        <% if @recipe.cook_photos.any? %>
+          <span class="text-texto-muted text-base font-normal">(<%= @recipe.cook_photos.size %>)</span>
+        <% end %>
+      </h2>
+
+      <% if @recipe.cook_photos.any? %>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+          <% @recipe.cook_photos.includes(:user).order(created_at: :desc).each do |photo| %>
+            <div class="relative group rounded-lg overflow-hidden">
+              <% if photo.thumbnail_base64.present? %>
+                <img src="<%= photo.thumbnail_base64 %>" alt="Foto de <%= photo.user.name %>" class="w-full h-40 object-cover">
+              <% elsif photo.image.attached? %>
+                <%= image_tag photo.image, class: "w-full h-40 object-cover" %>
+              <% end %>
+              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                <p class="text-white text-xs font-medium"><%= photo.user.name %></p>
+                <% if photo.caption.present? %>
+                  <p class="text-white/80 text-xs"><%= photo.caption %></p>
+                <% end %>
+              </div>
+              <% if logged_in? && photo.user == current_user %>
+                <%= button_to recipe_cook_photo_path(@recipe, photo), method: :delete, data: { turbo_confirm: "¿Eliminar esta foto?" }, class: "absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition cursor-pointer" do %>
+                  &times;
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-texto-muted text-sm mb-4">Todavía nadie subió fotos. ¡Sé el primero!</p>
+      <% end %>
+
+      <% if logged_in? && @recipe.user != current_user %>
+        <details class="mt-2">
+          <summary class="text-sm text-terracota font-medium cursor-pointer hover:underline">Subir mi foto</summary>
+          <div class="mt-3">
+            <%= form_with url: recipe_cook_photos_path(@recipe), method: :post, multipart: true, class: "space-y-3" do %>
+              <div>
+                <input type="file" name="cook_photo[image]" accept="image/*" required class="w-full border border-borde rounded-lg px-3 py-2 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-crema-light file:text-texto file:font-medium">
+              </div>
+              <div>
+                <input type="text" name="cook_photo[caption]" maxlength="200" placeholder="Comentario (opcional)" class="w-full border border-borde rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-terracota/30 focus:border-terracota outline-none">
+              </div>
+              <button type="submit" class="text-sm bg-terracota text-white px-5 py-2 rounded-full hover:bg-terracota/90 transition cursor-pointer">
+                Subir foto
+              </button>
+            <% end %>
+          </div>
+        </details>
+      <% elsif !logged_in? %>
+        <p class="text-texto-muted text-sm">
+          <%= link_to "Iniciá sesión", login_path, class: "text-terracota hover:underline font-medium" %> para subir una foto.
+        </p>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<% if @recipe.servings.present? %>
+<script>
+  (function() {
+    var FRACTIONS = {
+      0.125: '⅛', 0.25: '¼', 0.333: '⅓', 0.5: '½',
+      0.667: '⅔', 0.75: '¾'
+    };
+
+    function parseQuantity(str) {
+      if (!str) return null;
+      str = str.trim();
+
+      // Unicode fractions
+      var unicodeFracs = {'½': 0.5, '⅓': 0.333, '⅔': 0.667, '¼': 0.25, '¾': 0.75, '⅛': 0.125};
+      // Mixed: "1 ½" or "2½"
+      var mixedMatch = str.match(/^(\d+)\s*([½⅓⅔¼¾⅛])$/);
+      if (mixedMatch) return parseFloat(mixedMatch[1]) + (unicodeFracs[mixedMatch[2]] || 0);
+      // Single unicode fraction
+      if (unicodeFracs[str]) return unicodeFracs[str];
+
+      // Slash fractions: "1/2", "3/4"
+      var fracMatch = str.match(/^(\d+)\/(\d+)$/);
+      if (fracMatch) return parseFloat(fracMatch[1]) / parseFloat(fracMatch[2]);
+      // Mixed slash: "1 1/2"
+      var mixedSlash = str.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+      if (mixedSlash) return parseFloat(mixedSlash[1]) + parseFloat(mixedSlash[2]) / parseFloat(mixedSlash[3]);
+
+      // Plain number
+      var num = parseFloat(str.replace(',', '.'));
+      return isNaN(num) ? null : num;
+    }
+
+    function formatQuantity(val) {
+      if (val === null) return null;
+      var whole = Math.floor(val);
+      var frac = Math.round((val - whole) * 1000) / 1000;
+
+      // Find closest fraction
+      var bestFrac = null;
+      var bestDiff = 0.05;
+      for (var key in FRACTIONS) {
+        var diff = Math.abs(frac - parseFloat(key));
+        if (diff < bestDiff) { bestDiff = diff; bestFrac = FRACTIONS[key]; }
+      }
+
+      if (frac < 0.02) return whole.toString();
+      if (bestFrac && whole > 0) return whole + ' ' + bestFrac;
+      if (bestFrac) return bestFrac;
+      // Decimal fallback
+      return val % 1 === 0 ? val.toString() : val.toFixed(1).replace('.0', '');
+    }
+
+    window.updateServings = function(delta) {
+      var control = document.getElementById('servings-control');
+      if (!control) return;
+      var original = parseInt(control.dataset.originalServings);
+      var display = document.getElementById('current-servings');
+      var current = parseInt(display.textContent);
+      var next = Math.max(1, current + delta);
+      display.textContent = next;
+
+      var ratio = next / original;
+      document.querySelectorAll('.ingredient-quantity').forEach(function(el) {
+        var origStr = el.dataset.originalQuantity;
+        var origVal = parseQuantity(origStr);
+        if (origVal === null) return; // non-numeric, leave as-is
+        var newVal = origVal * ratio;
+        var formatted = formatQuantity(newVal);
+        el.querySelector('.quantity-value').textContent = formatted;
+      });
+    };
+  })();
+</script>
+<% end %>
+
+<% if @recipe.public? %>
+<script>
+  function shareRecipe() {
+    var url = window.location.href;
+    var title = '<%= j @recipe.title %>';
+
+    if (navigator.share) {
+      navigator.share({ title: title, url: url }).catch(function() {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function() {
+        var btn = document.getElementById('share-btn-text');
+        btn.textContent = '¡Link copiado!';
+        document.getElementById('share-btn').classList.add('text-lima-dark', 'border-lima/30');
+        setTimeout(function() {
+          btn.textContent = 'Compartir';
+          document.getElementById('share-btn').classList.remove('text-lima-dark', 'border-lima/30');
+        }, 2000);
+      });
+    }
+  }
+</script>
+<% end %>

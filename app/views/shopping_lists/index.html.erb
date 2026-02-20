@@ -1,0 +1,48 @@
+<% content_for(:title) { "Listas de compras - Cucharada" } %>
+
+<div class="max-w-3xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-3xl font-bold text-texto">Listas de compras</h1>
+    <%= button_to shopping_lists_path, method: :post, class: "bg-lima text-white px-5 py-2 rounded-full font-medium text-sm hover:bg-lima/90 transition cursor-pointer" do %>
+      + Nueva lista
+    <% end %>
+  </div>
+
+  <% if @shopping_lists.any? %>
+    <div class="space-y-3">
+      <% @shopping_lists.each do |list| %>
+        <% unchecked = list.items.unchecked.size %>
+        <% checked = list.items.checked.size %>
+        <% total = unchecked + checked %>
+        <%= link_to shopping_list_path(list), class: "block bg-white rounded-xl border border-borde p-4 hover:shadow-md transition" do %>
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-texto"><%= list.display_name %></h3>
+              <p class="text-texto-muted text-sm mt-0.5">
+                <% if total > 0 %>
+                  <%= unchecked %> pendiente<%= unchecked == 1 ? "" : "s" %>
+                  <% if checked > 0 %>
+                    &middot; <%= checked %> tachado<%= checked == 1 ? "" : "s" %>
+                  <% end %>
+                <% else %>
+                  Lista vacía
+                <% end %>
+              </p>
+            </div>
+            <% if total > 0 %>
+              <div class="w-16 h-2 bg-borde/30 rounded-full overflow-hidden">
+                <div class="h-full bg-lima rounded-full" style="width: <%= (checked.to_f / total * 100).round %>%"></div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-16">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-texto-muted/40 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <p class="text-texto-light text-lg">No tenés listas de compras.</p>
+      <p class="text-texto-muted text-sm mt-1">Creá una lista nueva o agregá ingredientes desde una receta.</p>
+    </div>
+  <% end %>
+</div>

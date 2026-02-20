@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title><%= content_for(:title) || "Cucharada" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="application-name" content="Cucharada">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="manifest" href="/manifest">
+    <meta name="theme-color" content="#E07A5F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Cucharada">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <%= stylesheet_link_tag :app %>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker');
+        });
+      }
+    </script>
+    <script>
+      if (sessionStorage.getItem('splashShown')) {
+        document.documentElement.classList.add('no-splash');
+      }
+    </script>
+    <style>
+      #splash {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background: #FFF7F2; transition: opacity 0.6s ease;
+      }
+      .no-splash #splash { display: none !important; }
+      @keyframes splashPulse {
+        from { transform: scale(0.95); opacity: 0.7; }
+        to { transform: scale(1.05); opacity: 1; }
+      }
+      #splash img { height: 160px; animation: splashPulse 1.2s ease-in-out infinite alternate; }
+    </style>
+  </head>
+
+  <body class="bg-fondo min-h-screen flex flex-col">
+    <!-- Splash Screen -->
+    <div id="splash">
+      <%= image_tag "logo.png", alt: "Cucharada" %>
+    </div>
+    <script>
+      (function() {
+        if (sessionStorage.getItem('splashShown')) return;
+        sessionStorage.setItem('splashShown', '1');
+        var splash = document.getElementById('splash');
+        setTimeout(function() { splash.style.opacity = '0'; }, 1800);
+        setTimeout(function() { splash.style.display = 'none'; }, 2400);
+      })();
+    </script>
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-fondo backdrop-blur-lg border-b border-borde/50 overflow-hidden shadow-sm">
+      <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-8">
+          <%= link_to root_path, class: "flex items-center hover:opacity-80 transition" do %>
+            <%= image_tag "logo.png", alt: "Cucharada", class: "h-24 -my-8" %>
+          <% end %>
+          <div class="hidden md:flex items-center gap-6 text-sm text-texto-light">
+            <%= link_to "Recetas", recipes_path, class: "hover:text-terracota transition" %>
+            <% if logged_in? %>
+              <%= link_to "Mis recetas", my_recipes_path, class: "hover:text-terracota transition" %>
+            <% end %>
+            <%= link_to "Buscar", search_path, class: "hover:text-terracota transition" %>
+            <% if logged_in? %>
+              <%= link_to "Lista de compras", shopping_lists_path, class: "hover:text-terracota transition" %>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 text-sm">
+          <% if logged_in? %>
+            <%= link_to "Favoritos", favorites_path, class: "text-texto-light hover:text-terracota transition hidden md:inline" %>
+            <span class="hidden md:inline text-texto-muted">|</span>
+            <span class="hidden md:inline text-texto-light"><%= current_user.name %></span>
+            <%= link_to "+ Nueva receta", new_recipe_path, class: "border border-terracota text-terracota px-4 py-1.5 rounded-full text-sm font-medium hover:bg-terracota hover:text-white transition" %>
+            <%= button_to "Salir", logout_path, method: :delete, class: "text-texto-light hover:text-texto transition cursor-pointer" %>
+          <% else %>
+            <%= link_to "Iniciar sesión", login_path, class: "text-texto-light hover:text-terracota transition" %>
+            <%= link_to "Registrarse", signup_path, class: "border border-terracota text-terracota px-4 py-1.5 rounded-full text-sm font-medium hover:bg-terracota hover:text-white transition" %>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Mobile navigation -->
+      <div class="md:hidden border-t border-borde/40 px-6 py-2 flex gap-6 text-sm text-texto-light overflow-x-auto">
+        <%= link_to "Recetas", recipes_path, class: "hover:text-terracota transition whitespace-nowrap" %>
+        <% if logged_in? %>
+          <%= link_to "Mis recetas", my_recipes_path, class: "hover:text-terracota transition whitespace-nowrap" %>
+        <% end %>
+        <%= link_to "Buscar", search_path, class: "hover:text-terracota transition whitespace-nowrap" %>
+        <% if logged_in? %>
+          <%= link_to "Lista", shopping_lists_path, class: "hover:text-terracota transition whitespace-nowrap" %>
+        <% end %>
+      </div>
+    </nav>
+
+    <!-- Toasts -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2">
+      <% if flash[:notice] %>
+        <div class="toast bg-white border border-borde shadow-lg rounded-xl px-5 py-3 text-sm text-texto flex items-center gap-3" style="animation: toastIn 0.3s ease, toastOut 0.3s ease 3.5s forwards;">
+          <span class="text-lima text-lg">&#10003;</span>
+          <%= flash[:notice] %>
+        </div>
+      <% end %>
+      <% if flash[:alert] %>
+        <div class="toast bg-white border border-red-200 shadow-lg rounded-xl px-5 py-3 text-sm text-texto flex items-center gap-3" style="animation: toastIn 0.3s ease, toastOut 0.3s ease 4.5s forwards;">
+          <span class="text-red-500 text-lg">!</span>
+          <%= flash[:alert] %>
+        </div>
+      <% end %>
+    </div>
+    <style>
+      @keyframes toastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+      @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+    </style>
+
+    <!-- Main content -->
+    <main class="flex-1 w-full max-w-6xl mx-auto px-6 pt-6 pb-10">
+      <%= yield %>
+    </main>
+
+    <footer class="border-t border-borde/40 text-texto-muted text-center py-5 text-xs tracking-wide">
+      <p>Cucharada &mdash; Tu recetario argentino con IA</p>
+    </footer>
+  </body>
+</html>

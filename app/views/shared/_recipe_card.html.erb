@@ -1,0 +1,75 @@
+<%= link_to recipe_path(recipe), class: "bg-white rounded-2xl border border-borde hover:shadow-md transition overflow-hidden block" do %>
+  <% if recipe.thumbnail_base64.present? %>
+    <img src="<%= recipe.thumbnail_base64 %>" alt="<%= recipe.title %>" class="w-full h-48 object-cover">
+  <% elsif recipe.image.attached? %>
+    <%= image_tag recipe.image, class: "w-full h-48 object-cover" %>
+  <% else %>
+    <div class="w-full h-48 bg-gradient-to-br from-crema to-terracota/20 flex items-center justify-center">
+      <%= image_tag "logo.png", class: "h-36 opacity-40 mix-blend-multiply" %>
+    </div>
+  <% end %>
+
+  <div class="p-4">
+    <h3 class="font-bold text-texto text-lg mb-1"><%= recipe.title %></h3>
+
+    <div class="flex items-center gap-2 mb-2">
+      <% if curated_recipe?(recipe) && recipe.chef_name.present? %>
+        <span class="inline-flex items-center gap-1 bg-terracota/10 text-terracota text-xs font-medium px-2.5 py-0.5 rounded-full border border-terracota/20">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <%= recipe.chef_name %>
+        </span>
+      <% elsif logged_in? && recipe.user == current_user %>
+        <span class="inline-flex items-center gap-1 bg-lima/10 text-lima-dark text-xs font-medium px-2.5 py-0.5 rounded-full border border-lima/20">
+          Mi receta
+        </span>
+        <% if recipe.public? %>
+          <span class="inline-flex items-center gap-1 text-texto-muted text-xs px-2 py-0.5 rounded-full border border-borde" title="Pública">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            Pública
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1 text-texto-muted text-xs px-2 py-0.5 rounded-full border border-borde" title="Privada">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Privada
+          </span>
+        <% end %>
+      <% else %>
+        <p class="text-texto-light text-sm">
+          por <%= recipe.user.name %>
+        </p>
+      <% end %>
+    </div>
+    <% if !curated_recipe?(recipe) && recipe.inspired_by.present? %>
+      <p class="text-texto-muted text-xs truncate mb-1">Inspirada en: <%= recipe.inspired_by %></p>
+    <% end %>
+    <% if recipe.tags.any? %>
+      <div class="flex flex-wrap gap-1 mb-1">
+        <% recipe.tags.first(3).each do |tag| %>
+          <span class="text-xs bg-crema text-texto-muted px-2 py-0.5 rounded-full border border-borde/50"><%= tag.name %></span>
+        <% end %>
+      </div>
+    <% end %>
+    <% if recipe.description.present? %>
+      <p class="text-texto-light text-sm line-clamp-2"><%= recipe.description %></p>
+    <% end %>
+    <% avg = recipe.average_rating %>
+    <% if avg %>
+      <div class="flex items-center gap-1 mt-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-terracota" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span class="text-sm font-medium text-texto"><%= avg %></span>
+        <span class="text-xs text-texto-muted">(<%= recipe.ratings.size %>)</span>
+      </div>
+    <% end %>
+    <div class="flex gap-3 mt-3 text-xs text-texto-muted">
+      <% if recipe.prep_time.present? %>
+        <span>Prep: <%= recipe.prep_time %> min</span>
+      <% end %>
+      <% if recipe.cook_time.present? %>
+        <span>Cocción: <%= recipe.cook_time %> min</span>
+      <% end %>
+      <% if recipe.servings.present? %>
+        <span><%= recipe.servings %> porciones</span>
+      <% end %>
+    </div>
+  </div>
+<% end %>

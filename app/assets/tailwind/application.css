@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  /* Cucharada design tokens */
+
+  /* Base */
+  --color-fondo: #FFF7F2;
+  --color-superficie: #FFFFFF;
+  --color-borde: #EFE6E1;
+
+  /* Text */
+  --color-texto: #2B2B2B;
+  --color-texto-light: #6B6B6B;
+  --color-texto-muted: #B7AFA9;
+
+  /* Brand accent (identity — not dominant) */
+  --color-terracota: #E07A5F;
+  --color-terracota-dark: #C9654C;
+
+  /* Primary action (one strong CTA per screen) */
+  --color-lima: #9BCB6C;
+  --color-lima-dark: #86B85C;
+
+  /* Legacy aliases for existing views */
+  --color-naranja: #E07A5F;
+  --color-naranja-light: #E99A85;
+  --color-naranja-dark: #C9654C;
+  --color-verde: #9BCB6C;
+  --color-verde-light: #B2D88A;
+  --color-verde-dark: #86B85C;
+  --color-crema: #EFE6E1;
+  --color-crema-light: #F5EFEA;
+  --color-crema-bg: #FFF7F2;
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #2B2B2B;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
