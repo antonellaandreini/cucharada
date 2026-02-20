@@ -12,14 +12,5 @@ test:
   database: cucharada_test
 
 production:
-  primary:
-    <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
-  cache:
-    <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
-    migrations_paths: db/cache_migrate
-  queue:
-    <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
-    migrations_paths: db/queue_migrate
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
