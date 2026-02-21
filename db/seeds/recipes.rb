@@ -60,7 +60,8 @@ recipes_data.each_with_index do |data, index|
     cook_time: data["cook_time"],
     servings: data["servings"],
     source_type: "cucharada",
-    visibility: "public"
+    visibility: "public",
+    thumbnail_url: data["thumbnail_url"]
   )
 
   # Ingredientes
