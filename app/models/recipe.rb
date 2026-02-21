@@ -29,6 +29,7 @@ class Recipe < ApplicationRecord
   validates :title, presence: true
 
   scope :publicly_visible, -> { where(visibility: "public") }
+  scope :without_base64, -> { select(column_names - ["thumbnail_base64"]) }
 
   def public?
     visibility == "public"
@@ -47,7 +48,12 @@ class Recipe < ApplicationRecord
   end
 
   def average_rating
-    ratings.average(:score)&.round(1)
+    if ratings.loaded?
+      return nil if ratings.empty?
+      (ratings.sum(&:score).to_f / ratings.size).round(1)
+    else
+      ratings.average(:score)&.round(1)
+    end
   end
 
   def rating_by(user)

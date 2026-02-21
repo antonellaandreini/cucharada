@@ -10,18 +10,23 @@ class RecipesController < ApplicationController
 
     # Recipe of the day: deterministic daily pick from curated recipes
     if page == 1 && @query.blank?
-      curated_ids = Recipe.where(source_type: "cucharada").pluck(:id)
-      if curated_ids.any?
+      curated_count = Recipe.where(source_type: "cucharada").count
+      if curated_count > 0
         daily_seed = Date.today.to_s.hash.abs
-        @recipe_of_the_day = Recipe.includes(:ingredients, :user, :ratings)
-                                   .find(curated_ids[daily_seed % curated_ids.size])
+        @recipe_of_the_day = Recipe.without_base64
+                                   .where(source_type: "cucharada")
+                                   .includes(:user, :ratings, :tags)
+                                   .offset(daily_seed % curated_count)
+                                   .limit(1)
+                                   .first
       end
     end
 
-    curated_scope = Recipe.where(source_type: "cucharada")
-    community_scope = Recipe.where.not(source_type: "cucharada")
-                                  .where.not(user_id: cucharada_user_ids)
-                                  .publicly_visible
+    curated_scope = Recipe.without_base64.where(source_type: "cucharada")
+    community_scope = Recipe.without_base64
+                            .where.not(source_type: "cucharada")
+                            .where.not(user_id: cucharada_user_ids)
+                            .publicly_visible
 
     if @query.present?
       curated_scope = curated_scope.full_text_search(@query)
@@ -29,13 +34,14 @@ class RecipesController < ApplicationController
     end
 
     @curated_total = curated_scope.count
-    @curated_recipes = curated_scope.includes(:ingredients, :user, :ratings)
+    @curated_recipes = curated_scope.includes(:user, :ratings, :tags)
                                     .order(created_at: :desc)
                                     .offset((page - 1) * per_page)
                                     .limit(per_page)
 
-    @community_recipes = community_scope.includes(:ingredients, :user, :ratings)
+    @community_recipes = community_scope.includes(:user, :ratings, :tags)
                                         .order(created_at: :desc)
+                                        .limit(per_page)
 
     if logged_in?
       @community_recipes = @community_recipes.where.not(user: current_user)
@@ -50,7 +56,7 @@ class RecipesController < ApplicationController
       scope = scope.full_text_search(@query)
     end
 
-    @recipes = scope.includes(:ingredients, :user, :ratings)
+    @recipes = scope.without_base64.includes(:user, :ratings, :tags)
                     .order(created_at: :desc)
   end
 

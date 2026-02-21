@@ -259,7 +259,10 @@ def fetch_image_urls(conn, query, per_page: 15)
 
     photos.each do |photo|
       url = photo.dig("src", "medium")
-      urls << url if url.present?
+      next unless url.present?
+      # Use smaller dimensions for faster loading
+      url = url.sub("h=350", "h=250&w=400")
+      urls << url
     end
   rescue => e
     puts "\n  Error: #{e.message}"
