@@ -32,7 +32,7 @@ class RecipesController < ApplicationController
       community_scope = community_scope.full_text_search(@query)
     end
 
-    @curated_total = curated_scope.count
+    @curated_total = curated_scope.except(:select, :order).count
     @curated_recipes = curated_scope.without_base64
                                     .includes(:user, :ratings, :tags)
                                     .order(created_at: :desc)

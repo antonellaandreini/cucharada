@@ -3,7 +3,7 @@
 <div class="max-w-3xl mx-auto">
   <div class="bg-white rounded-xl border border-borde overflow-hidden mb-6">
     <% if @recipe.thumbnail_url.present? %>
-      <img src="<%= @recipe.thumbnail_url %>" alt="<%= @recipe.title %>" class="w-full h-72 object-cover">
+      <img src="<%= @recipe.thumbnail_url %>" alt="<%= @recipe.title %>" class="w-full h-72 object-cover" loading="lazy" onerror="this.onerror=null;this.outerHTML='<div class=&quot;w-full h-72 bg-gradient-to-br from-crema to-terracota/20 flex items-center justify-center&quot;><img src=&quot;<%= image_path('logo.png') %>&quot; class=&quot;h-56 opacity-40 mix-blend-multiply&quot;></div>';">
     <% elsif @recipe.thumbnail_base64.present? %>
       <img src="<%= @recipe.thumbnail_base64 %>" alt="<%= @recipe.title %>" class="w-full h-72 object-cover">
     <% elsif @recipe.image.attached? %>

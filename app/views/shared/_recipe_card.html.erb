@@ -1,6 +1,6 @@
 <%= link_to recipe_path(recipe), class: "bg-white rounded-2xl border border-borde hover:shadow-md transition overflow-hidden block" do %>
   <% if recipe.thumbnail_url.present? %>
-    <img src="<%= recipe.thumbnail_url %>" alt="<%= recipe.title %>" class="w-full h-48 object-cover">
+    <img src="<%= recipe.thumbnail_url %>" alt="<%= recipe.title %>" class="w-full h-48 object-cover" loading="lazy" onerror="this.onerror=null;this.outerHTML='<div class=&quot;w-full h-48 bg-gradient-to-br from-crema to-terracota/20 flex items-center justify-center&quot;><img src=&quot;<%= image_path('logo.png') %>&quot; class=&quot;h-36 opacity-40 mix-blend-multiply&quot;></div>';">
   <% elsif recipe.thumbnail_base64.present? %>
     <img src="<%= recipe.thumbnail_base64 %>" alt="<%= recipe.title %>" class="w-full h-48 object-cover">
   <% elsif recipe.image.attached? %>
