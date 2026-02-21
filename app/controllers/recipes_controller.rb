@@ -33,16 +33,17 @@ class RecipesController < ApplicationController
     end
 
     @curated_total = curated_scope.except(:select, :order).count
-    @curated_recipes = curated_scope.without_base64
-                                    .includes(:user, :ratings, :tags)
+
+    loading_scope = @query.present? ? curated_scope : curated_scope.without_base64
+    @curated_recipes = loading_scope.includes(:user, :ratings, :tags)
                                     .order(created_at: :desc)
                                     .offset((page - 1) * per_page)
                                     .limit(per_page)
 
-    @community_recipes = community_scope.without_base64
-                                        .includes(:user, :ratings, :tags)
-                                        .order(created_at: :desc)
-                                        .limit(per_page)
+    community_loading = @query.present? ? community_scope : community_scope.without_base64
+    @community_recipes = community_loading.includes(:user, :ratings, :tags)
+                                          .order(created_at: :desc)
+                                          .limit(per_page)
 
     if logged_in?
       @community_recipes = @community_recipes.where.not(user: current_user)

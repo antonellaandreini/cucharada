@@ -33,7 +33,8 @@ class SearchController < ApplicationController
   private
 
   def build_combined_query
-    scope = Recipe.without_base64.includes(:user, :ratings, :tags)
+    # Don't use without_base64 when text search is active (SELECT conflict with pg_search)
+    scope = @query.present? ? Recipe.includes(:user, :ratings, :tags) : Recipe.without_base64.includes(:user, :ratings, :tags)
 
     scope = filter_by_text(scope) if @query.present?
     scope = filter_by_ingredients(scope) if @selected_ids.any?
