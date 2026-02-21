@@ -22,9 +22,8 @@ class RecipesController < ApplicationController
       end
     end
 
-    curated_scope = Recipe.without_base64.where(source_type: "cucharada")
-    community_scope = Recipe.without_base64
-                            .where.not(source_type: "cucharada")
+    curated_scope = Recipe.where(source_type: "cucharada")
+    community_scope = Recipe.where.not(source_type: "cucharada")
                             .where.not(user_id: cucharada_user_ids)
                             .publicly_visible
 
@@ -34,12 +33,14 @@ class RecipesController < ApplicationController
     end
 
     @curated_total = curated_scope.count
-    @curated_recipes = curated_scope.includes(:user, :ratings, :tags)
+    @curated_recipes = curated_scope.without_base64
+                                    .includes(:user, :ratings, :tags)
                                     .order(created_at: :desc)
                                     .offset((page - 1) * per_page)
                                     .limit(per_page)
 
-    @community_recipes = community_scope.includes(:user, :ratings, :tags)
+    @community_recipes = community_scope.without_base64
+                                        .includes(:user, :ratings, :tags)
                                         .order(created_at: :desc)
                                         .limit(per_page)
 
