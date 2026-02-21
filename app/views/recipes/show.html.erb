@@ -2,7 +2,9 @@
 
 <div class="max-w-3xl mx-auto">
   <div class="bg-white rounded-xl border border-borde overflow-hidden mb-6">
-    <% if @recipe.thumbnail_base64.present? %>
+    <% if @recipe.thumbnail_url.present? %>
+      <img src="<%= @recipe.thumbnail_url %>" alt="<%= @recipe.title %>" class="w-full h-72 object-cover">
+    <% elsif @recipe.thumbnail_base64.present? %>
       <img src="<%= @recipe.thumbnail_base64 %>" alt="<%= @recipe.title %>" class="w-full h-72 object-cover">
     <% elsif @recipe.image.attached? %>
       <%= image_tag @recipe.image, class: "w-full h-72 object-cover" %>

@@ -1,16 +1,13 @@
 namespace :recipes do
-  desc "Download thumbnail images from Pexels for curated recipes and store as base64"
+  desc "Fetch thumbnail image URLs from Pexels for curated recipes"
   task download_thumbnails: :environment do
     $stdout.sync = true
     api_key = ENV["PEXELS_API_KEY"]
     abort "Set PEXELS_API_KEY in .env" unless api_key.present?
 
     require "faraday"
-    require "base64"
-    require "image_processing/vips"
-    require "tempfile"
 
-    # Map Spanish title keywords → English Pexels search terms for PLATED FOOD
+    # Map Spanish title keywords -> English Pexels search terms for PLATED FOOD
     # Each category: [keywords_to_match, pexels_search_query]
     FOOD_CATEGORIES = [
       # Empanadas
@@ -127,17 +124,11 @@ namespace :recipes do
       f.options.open_timeout = 10
     end
 
-    img_conn = Faraday.new do |f|
-      f.adapter Faraday.default_adapter
-      f.options.timeout = 20
-      f.options.open_timeout = 10
-    end
-
     recipes = Recipe.where(source_type: "cucharada")
-                    .where(thumbnail_base64: [nil, ""])
+                    .where(thumbnail_url: [nil, ""])
                     .order(:id)
     total = recipes.count
-    puts "Found #{total} curated recipes without thumbnails"
+    puts "Found #{total} curated recipes without thumbnail URLs"
     next if total == 0
 
     # Step 1: Categorize recipes
@@ -171,38 +162,38 @@ namespace :recipes do
       puts "    #{q}: #{rs.size} recipes"
     end
 
-    # Step 2: Fetch images per category
-    puts "\nStep 2: Downloading images from Pexels..."
+    # Step 2: Fetch image URLs per category
+    puts "\nStep 2: Fetching image URLs from Pexels..."
     assigned = 0
     api_calls = 0
-    cache = {} # query => [base64_images]
+    cache = {} # query => [urls]
 
     categorized.each_with_index do |(query, group_recipes), idx|
       # Calculate how many photos we need (more variety for larger groups)
       photos_needed = [group_recipes.size, 30].min
       per_page = [photos_needed, 40].min
 
-      images = fetch_images(conn, img_conn, query, per_page: per_page)
+      urls = fetch_image_urls(conn, query, per_page: per_page)
       api_calls += 1
 
       # If too few results, try a simpler query
-      if images.size < 3
+      if urls.size < 3
         simple_query = query.split.first(3).join(" ") + " food plate"
-        images = fetch_images(conn, img_conn, simple_query, per_page: per_page)
+        urls = fetch_image_urls(conn, simple_query, per_page: per_page)
         api_calls += 1
       end
 
-      if images.empty?
+      if urls.empty?
         print "x"
         uncategorized.concat(group_recipes)
         next
       end
 
-      cache[query] = images
+      cache[query] = urls
 
-      # Assign images to recipes (cycle through available images)
+      # Assign URLs to recipes (cycle through available URLs)
       group_recipes.shuffle.each_with_index do |recipe, i|
-        recipe.update_column(:thumbnail_base64, images[i % images.size])
+        recipe.update_column(:thumbnail_url, urls[i % urls.size])
         assigned += 1
       end
 
@@ -213,36 +204,36 @@ namespace :recipes do
       sleep 1
     end
 
-    # Step 3: Handle uncategorized with fallback images
+    # Step 3: Handle uncategorized with fallback URLs
     if uncategorized.any?
-      puts "\n\nStep 3: Fetching fallback images for #{uncategorized.size} uncategorized recipes..."
+      puts "\n\nStep 3: Fetching fallback URLs for #{uncategorized.size} uncategorized recipes..."
 
       all_fallback = []
       FALLBACK_QUERIES.each do |query|
-        images = fetch_images(conn, img_conn, query, per_page: 40)
+        urls = fetch_image_urls(conn, query, per_page: 40)
         api_calls += 1
-        all_fallback.concat(images)
+        all_fallback.concat(urls)
         sleep 1
       end
 
       if all_fallback.any?
         all_fallback.shuffle!
         uncategorized.each_with_index do |recipe, idx|
-          recipe.update_column(:thumbnail_base64, all_fallback[idx % all_fallback.size])
+          recipe.update_column(:thumbnail_url, all_fallback[idx % all_fallback.size])
           assigned += 1
         end
-        puts "  Assigned #{uncategorized.size} recipes with fallback images"
+        puts "  Assigned #{uncategorized.size} recipes with fallback URLs"
       end
     end
 
-    final = Recipe.where(source_type: "cucharada").where.not(thumbnail_base64: [nil, ""]).count
-    puts "\nDone! #{final}/#{total} curated recipes now have thumbnails."
+    final = Recipe.where(source_type: "cucharada").where.not(thumbnail_url: [nil, ""]).count
+    puts "\nDone! #{final}/#{total} curated recipes now have thumbnail URLs."
     puts "API calls used: #{api_calls}"
   end
 end
 
-def fetch_images(conn, img_conn, query, per_page: 15)
-  images = []
+def fetch_image_urls(conn, query, per_page: 15)
+  urls = []
 
   begin
     response = nil
@@ -258,54 +249,21 @@ def fetch_images(conn, img_conn, query, per_page: 15)
         response = nil
       else
         puts "\n  Pexels error #{response.status} for '#{query}'"
-        return images
+        return urls
       end
     end
 
-    return images unless response&.status == 200
+    return urls unless response&.status == 200
 
     photos = JSON.parse(response.body)["photos"] || []
 
     photos.each do |photo|
       url = photo.dig("src", "medium")
-      next unless url
-
-      begin
-        img_response = img_conn.get(url)
-        next unless img_response.status == 200
-
-        base64 = process_image(img_response.body)
-        images << base64 if base64
-      rescue => e
-        # Skip failed downloads
-      end
+      urls << url if url.present?
     end
   rescue => e
     puts "\n  Error: #{e.message}"
   end
 
-  images
-end
-
-def process_image(image_data)
-  tempfile = Tempfile.new(["pexels", ".jpg"], binmode: true)
-  tempfile.write(image_data)
-  tempfile.flush
-
-  result = ImageProcessing::Vips
-    .source(tempfile.path)
-    .resize_to_fill(800, 500)
-    .convert("jpeg")
-    .saver(quality: 80)
-    .call
-
-  jpeg_data = File.read(result.path, mode: "rb")
-  encoded = Base64.strict_encode64(jpeg_data)
-  "data:image/jpeg;base64,#{encoded}"
-rescue => e
-  nil
-ensure
-  tempfile&.close
-  tempfile&.unlink
-  File.delete(result.path) if result.respond_to?(:path) && File.exist?(result.path)
+  urls
 end

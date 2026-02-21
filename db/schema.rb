@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_20_175207) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_21_011608) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -139,6 +139,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_20_175207) do
     t.string "source_type"
     t.string "source_url"
     t.text "thumbnail_base64"
+    t.string "thumbnail_url"
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false

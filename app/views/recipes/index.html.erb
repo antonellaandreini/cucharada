@@ -26,7 +26,9 @@
   <div class="mb-10">
     <h2 class="text-xl font-semibold text-texto mb-4">Receta del día</h2>
     <%= link_to recipe_path(@recipe_of_the_day), class: "bg-white rounded-2xl border border-borde hover:shadow-md transition overflow-hidden block md:flex" do %>
-      <% if @recipe_of_the_day.thumbnail_base64.present? %>
+      <% if @recipe_of_the_day.thumbnail_url.present? %>
+        <img src="<%= @recipe_of_the_day.thumbnail_url %>" alt="<%= @recipe_of_the_day.title %>" class="w-full md:w-1/2 h-56 md:h-72 object-cover">
+      <% elsif @recipe_of_the_day.thumbnail_base64.present? %>
         <img src="<%= @recipe_of_the_day.thumbnail_base64 %>" alt="<%= @recipe_of_the_day.title %>" class="w-full md:w-1/2 h-56 md:h-72 object-cover">
       <% elsif @recipe_of_the_day.image.attached? %>
         <%= image_tag @recipe_of_the_day.image, class: "w-full md:w-1/2 h-56 md:h-72 object-cover" %>
