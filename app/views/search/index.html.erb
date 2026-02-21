@@ -42,7 +42,7 @@
       <% end %>
 
       <% @selected_ids.each do |id| %>
-        <% ingredient = Ingredient.find_by(id: id) %>
+        <% ingredient = @selected_ingredients[id] %>
         <% if ingredient %>
           <%
             remaining_ids = @selected_ids - [id]
@@ -80,7 +80,7 @@
           @selected_ids.each { |id| (chip_params[:ingredient_ids] ||= []) << id }
         %>
         <a href="<%= search_path(chip_params) %>" class="inline-flex items-center gap-1.5 bg-terracota/10 text-terracota text-sm font-medium px-3 py-1.5 rounded-full border border-terracota/20 hover:bg-terracota/20 transition">
-          #<%= Tag.find_by(slug: @tag)&.name || @tag %>
+          #<%= @tag_name || @tag %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </a>
       <% end %>
@@ -144,7 +144,7 @@
             <div id="selected-ingredients" class="space-y-1 mt-3">
               <% if @selected_ids.any? %>
                 <% @selected_ids.each do |id| %>
-                  <% ingredient = Ingredient.find_by(id: id) %>
+                  <% ingredient = @selected_ingredients[id] %>
                   <% if ingredient %>
                     <div class="flex items-center justify-between bg-lima/10 px-3 py-1.5 rounded-lg text-sm border border-lima/20">
                       <span class="text-texto"><%= ingredient.name %></span>

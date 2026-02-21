@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_014122) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_21_020234) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -145,7 +145,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_014122) do
     t.integer "user_id", null: false
     t.string "visibility", default: "private", null: false
     t.index ["search_vector"], name: "index_recipes_on_search_vector", using: :gin
+    t.index ["source_type", "created_at"], name: "index_recipes_on_source_type_and_created_at"
+    t.index ["source_type"], name: "index_recipes_on_source_type"
     t.index ["user_id"], name: "index_recipes_on_user_id"
+    t.index ["visibility", "created_at"], name: "index_recipes_on_visibility_and_created_at"
+    t.index ["visibility"], name: "index_recipes_on_visibility"
   end
 
   create_table "shopping_list_items", force: :cascade do |t|

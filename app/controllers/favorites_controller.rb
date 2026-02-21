@@ -2,7 +2,7 @@ class FavoritesController < ApplicationController
   before_action :require_login
 
   def index
-    @recipes = current_user.favorite_recipes.includes(:ingredients, :user, :ratings).order("favorites.created_at DESC")
+    @recipes = current_user.favorite_recipes.without_base64.includes(:user, :ratings, :tags).order("favorites.created_at DESC")
   end
 
   def create
